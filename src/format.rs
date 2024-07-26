@@ -1,9 +1,20 @@
-use std::ffi::{OsStr, OsString};
-use std::fmt::{Display, Formatter};
-use std::path::{Path, PathBuf};
+use std::ffi::OsStr;
+use std::fs::{read_to_string, File};
+use std::io::Write;
+use std::path::Path;
 
-use derive_more::{Display, Error, From};
+use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+
+use crate::errors::deserialize_error::DeserializeError;
+use crate::errors::load_as_error::LoadAsError;
+use crate::errors::load_error::LoadError;
+use crate::errors::path_has_no_extension_error::PathHasNoExtensionError;
+use crate::errors::save_as_error::SaveAsError;
+use crate::errors::save_error::SaveError;
+use crate::errors::serialize_error::SerializeError;
+use crate::errors::try_from_path_error::TryFromPathError;
+use crate::errors::unrecognized_extension_error::UnrecognizedExtensionError;
 
 #[derive(Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq, Hash, Clone, Copy, Debug)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
@@ -21,6 +32,66 @@ pub enum Format {
 }
 
 impl Format {
+    pub fn save<T: Serialize>(self, value: &T, path: impl AsRef<Path>) -> Result<(), SaveError> {
+        let mut file = File::create(path)?;
+        let output = self.serialize(value)?;
+        file.write_all(output.as_bytes())?;
+        Ok(())
+    }
+
+    pub fn save_as<T: Serialize>(value: &T, path: impl AsRef<Path>) -> Result<(), SaveAsError> {
+        let format = Format::try_from_path(path.as_ref())?;
+        format.save(value, path).map_err(From::from)
+    }
+
+    pub fn save_to<T: Serialize>(self, value: &T, file_dir: impl AsRef<Path>, file_stem: &str) -> Result<(), SaveError> {
+        let path_buf = file_dir.as_ref().join(self.to_file_name(file_stem));
+        self.save(value, path_buf)
+    }
+
+    pub fn load<T: DeserializeOwned>(self, path: impl AsRef<Path>) -> Result<T, LoadError> {
+        let string = read_to_string(path)?;
+        let output = self.deserialize(&string)?;
+        Ok(output)
+    }
+
+    pub fn load_as<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result<T, LoadAsError> {
+        let format = Format::try_from_path(path.as_ref())?;
+        format.load(path).map_err(From::from)
+    }
+
+    #[allow(unreachable_patterns, unused_variables, unreachable_code)]
+    pub fn serialize<T: Serialize>(self, input: &T) -> Result<String, SerializeError> {
+        Ok(match self {
+            #[cfg(feature = "serde_json")]
+            Format::Json => serde_json::to_string_pretty(input)?,
+            #[cfg(feature = "serde_yaml")]
+            Format::Yaml => serde_yaml::to_string(input)?,
+            #[cfg(feature = "serde-xml-rs")]
+            Format::Xml => serde_xml_rs::to_string(input)?,
+            #[cfg(feature = "quick-xml")]
+            Format::Xml => quick_xml::se::to_string(input)?,
+            #[cfg(feature = "toml")]
+            Format::Toml => toml::to_string(input)?,
+        })
+    }
+
+    #[allow(unreachable_patterns, unused_variables, unreachable_code)]
+    pub fn deserialize<T: DeserializeOwned>(self, input: &str) -> Result<T, DeserializeError> {
+        Ok(match self {
+            #[cfg(feature = "serde_json")]
+            Format::Json => serde_json::from_str(input)?,
+            #[cfg(feature = "serde_yaml")]
+            Format::Yaml => serde_yaml::from_str(input)?,
+            #[cfg(feature = "serde-xml-rs")]
+            Format::Xml => serde_xml_rs::from_str(input)?,
+            #[cfg(feature = "quick-xml")]
+            Format::Xml => quick_xml::de::from_str(input)?,
+            #[cfg(feature = "toml")]
+            Format::Toml => toml::from_str(input)?,
+        })
+    }
+
     pub fn to_file_extension(&self) -> &'static str {
         match self {
             #[cfg(feature = "serde_json")]
@@ -91,32 +162,4 @@ impl TryFrom<&Path> for Format {
     fn try_from(value: &Path) -> Result<Self, Self::Error> {
         Self::try_from_path(value)
     }
-}
-
-#[derive(Error, Eq, PartialEq, Hash, Clone, Debug)]
-pub struct UnrecognizedExtensionError {
-    pub extension: OsString,
-}
-
-impl Display for UnrecognizedExtensionError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Unrecognized extension: {:?}", self.extension)
-    }
-}
-
-#[derive(Error, Eq, PartialEq, Hash, Clone, Debug)]
-pub struct PathHasNoExtensionError {
-    pub path: PathBuf,
-}
-
-impl Display for PathHasNoExtensionError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Path has no extension: {:?}", self.path)
-    }
-}
-
-#[derive(Error, Display, From, Eq, PartialEq, Hash, Clone, Debug)]
-pub enum TryFromPathError {
-    PathHasNoExtension(PathHasNoExtensionError),
-    UnrecognizedExtension(UnrecognizedExtensionError),
 }
