@@ -10,6 +10,7 @@ use crate::errors::deserialize_error::DeserializeError;
 use crate::errors::load_as_error::LoadAsError;
 use crate::errors::load_error::LoadError;
 use crate::errors::path_has_no_extension_error::PathHasNoExtensionError;
+use crate::errors::record_not_found_error::CsvRowNotFoundError;
 use crate::errors::save_as_error::SaveAsError;
 use crate::errors::save_error::SaveError;
 use crate::errors::serialize_error::SerializeError;
@@ -29,6 +30,8 @@ pub enum Format {
     Xml,
     #[cfg(feature = "toml")]
     Toml,
+    #[cfg(feature = "csv")]
+    Csv,
 }
 
 impl Format {
@@ -73,6 +76,15 @@ impl Format {
             Format::Xml => quick_xml::se::to_string(input)?,
             #[cfg(feature = "toml")]
             Format::Toml => toml::to_string(input)?,
+            #[cfg(feature = "csv")]
+            Format::Csv => {
+                let mut writer = csv::Writer::from_writer(vec![]);
+                writer.serialize(input)?;
+                let vec = writer
+                    .into_inner()
+                    .expect("Writer must return a vec without errors");
+                String::from_utf8(vec)?
+            }
         })
     }
 
@@ -89,6 +101,14 @@ impl Format {
             Format::Xml => quick_xml::de::from_str(input)?,
             #[cfg(feature = "toml")]
             Format::Toml => toml::from_str(input)?,
+            #[cfg(feature = "csv")]
+            Format::Csv => {
+                // NOTE: The input must contain the columns
+                let mut reader = csv::Reader::from_reader(input.as_bytes());
+                let mut iter = reader.deserialize();
+                iter.next()
+                    .ok_or::<DeserializeError>(CsvRowNotFoundError.into())??
+            }
         })
     }
 

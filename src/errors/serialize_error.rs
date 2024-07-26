@@ -1,3 +1,5 @@
+use std::string::FromUtf8Error;
+
 use derive_more::{Display, Error, From};
 
 #[derive(Error, Display, From, Debug)]
@@ -13,4 +15,8 @@ pub enum SerializeError {
     QuickXml(quick_xml::DeError),
     #[cfg(feature = "toml")]
     Toml(toml::ser::Error),
+    #[cfg(feature = "csv")]
+    Csv(csv::Error),
+    #[cfg(feature = "csv")]
+    FromUtf8(FromUtf8Error),
 }
