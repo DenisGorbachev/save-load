@@ -1,27 +1,27 @@
 use derive_more::{Display, Error, From};
-use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 use crate::format::Format;
 
 #[allow(unreachable_patterns, unused_variables, unreachable_code)]
-pub fn serialize<T: Serialize>(input: &T, format: Format) -> Result<String, SerializeError> {
+pub fn deserialize<T: DeserializeOwned>(input: &str, format: Format) -> Result<T, DeserializeError> {
     Ok(match format {
         #[cfg(feature = "serde_json")]
-        Format::Json => serde_json::to_string_pretty(input)?,
+        Format::Json => serde_json::from_str(input)?,
         #[cfg(feature = "serde_yaml")]
-        Format::Yaml => serde_yaml::to_string(input)?,
+        Format::Yaml => serde_yaml::from_str(input)?,
         #[cfg(feature = "serde-xml-rs")]
-        Format::Xml => serde_xml_rs::to_string(input)?,
+        Format::Xml => serde_xml_rs::from_str(input)?,
         #[cfg(feature = "quick-xml")]
-        Format::Xml => quick_xml::se::to_string(input)?,
+        Format::Xml => quick_xml::de::from_str(input)?,
         #[cfg(feature = "toml")]
-        Format::Toml => toml::to_string(input)?,
+        Format::Toml => toml::from_str(input)?,
     })
 }
 
 #[derive(Error, Display, From, Debug)]
 #[non_exhaustive]
-pub enum SerializeError {
+pub enum DeserializeError {
     #[cfg(feature = "serde_json")]
     SerdeJson(serde_json::Error),
     #[cfg(feature = "serde_yaml")]
@@ -31,5 +31,5 @@ pub enum SerializeError {
     #[cfg(feature = "quick-xml")]
     QuickXml(quick_xml::DeError),
     #[cfg(feature = "toml")]
-    Toml(toml::ser::Error),
+    Toml(toml::de::Error),
 }
