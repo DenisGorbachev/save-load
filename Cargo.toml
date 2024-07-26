@@ -1,11 +1,11 @@
 [package]
-name = "serialize"
+name = "save-load"
 version = "0.1.0"
 edition = "2021"
 description = "Read & write files in JSON, YAML, XML, and TOML formats."
 license = "Apache-2.0 OR MIT"
-homepage = "https://github.com/DenisGorbachev/serialize"
-repository = "https://github.com/DenisGorbachev/serialize"
+homepage = "https://github.com/DenisGorbachev/save-load"
+repository = "https://github.com/DenisGorbachev/save-load"
 readme = "README.md"
 keywords = ["serde", "filesystem", "fs", "serialize", "format"]
 categories = ["filesystem", "rendering::data-formats", "value-formatting", "encoding", "rust-patterns"]

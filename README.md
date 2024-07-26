@@ -4,8 +4,8 @@
 
 # Read & write files in JSON, YAML, XML, and TOML formats
 
-[![Build](https://github.com/DenisGorbachev/serialize/actions/workflows/ci.yml/badge.svg)](https://github.com/DenisGorbachev/serialize)
-[![Documentation](https://docs.rs/serialize/badge.svg)](https://docs.rs/serialize)
+[![Build](https://github.com/DenisGorbachev/save-load/actions/workflows/ci.yml/badge.svg)](https://github.com/DenisGorbachev/save-load)
+[![Documentation](https://docs.rs/save-load/badge.svg)](https://docs.rs/save-load)
 
 
 
@@ -13,14 +13,14 @@
 ## Installation
 
 ```shell
-cargo add serialize url
+cargo add save-load url
 ```
 
 **Important:** add the `url` crate too.
 
 ## Gratitude
 
-Like the project? [Say thanks!](https://github.com/DenisGorbachev/serialize/discussions/new?category=gratitude) ❤️
+Like the project? [Say thanks!](https://github.com/DenisGorbachev/save-load/discussions/new?category=gratitude) ❤️
 
 ## License
 
