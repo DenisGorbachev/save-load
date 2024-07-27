@@ -1,5 +1,3 @@
-use std::string::FromUtf8Error;
-
 use derive_more::{Display, Error, From};
 
 #[derive(Error, Display, From, Debug)]
@@ -18,5 +16,5 @@ pub enum SerializeError {
     #[cfg(feature = "csv")]
     Csv(csv::Error),
     #[cfg(feature = "csv")]
-    FromUtf8(FromUtf8Error),
+    FromUtf8(std::string::FromUtf8Error),
 }

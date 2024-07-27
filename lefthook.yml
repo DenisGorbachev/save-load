@@ -16,7 +16,9 @@ pre-commit:
       run: cargo fmt --all
       stage_fixed: true
     lint-code:
-      run: cargo clippy --all-targets --all-features -- -D warnings
+      run: |
+        cargo clippy --all-targets --all-features -- -D warnings
+        cargo clippy --all-targets --no-default-features -- -D warnings
     test-code:
       run: cargo nextest run --no-fail-fast
     lint-docs:

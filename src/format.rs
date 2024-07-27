@@ -10,7 +10,6 @@ use crate::errors::deserialize_error::DeserializeError;
 use crate::errors::load_as_error::LoadAsError;
 use crate::errors::load_error::LoadError;
 use crate::errors::path_has_no_extension_error::PathHasNoExtensionError;
-use crate::errors::record_not_found_error::CsvRowNotFoundError;
 use crate::errors::save_as_error::SaveAsError;
 use crate::errors::save_error::SaveError;
 use crate::errors::serialize_error::SerializeError;
@@ -107,7 +106,7 @@ impl Format {
                 let mut reader = csv::Reader::from_reader(input.as_bytes());
                 let mut iter = reader.deserialize();
                 iter.next()
-                    .ok_or::<DeserializeError>(CsvRowNotFoundError.into())??
+                    .ok_or::<DeserializeError>(crate::errors::record_not_found_error::CsvRowNotFoundError.into())??
             }
         })
     }

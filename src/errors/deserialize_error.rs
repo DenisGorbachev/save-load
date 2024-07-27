@@ -1,7 +1,5 @@
 use derive_more::{Display, Error, From};
 
-use crate::errors::record_not_found_error::CsvRowNotFoundError;
-
 #[derive(Error, Display, From, Debug)]
 #[non_exhaustive]
 pub enum DeserializeError {
@@ -18,5 +16,5 @@ pub enum DeserializeError {
     #[cfg(feature = "csv")]
     Csv(csv::Error),
     #[cfg(feature = "csv")]
-    CsvRowNotFound(CsvRowNotFoundError),
+    CsvRowNotFound(crate::errors::record_not_found_error::CsvRowNotFoundError),
 }
