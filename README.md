@@ -20,7 +20,7 @@ cargo add save-load url
 
 ## Gratitude
 
-Like the project? [Say thanks!](https://github.com/DenisGorbachev/save-load/discussions/new?category=gratitude) ❤️
+Like the project? [⭐ Star this repo](https://github.com/DenisGorbachev/save-load) on GitHub!
 
 ## License
 
