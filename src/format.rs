@@ -62,6 +62,26 @@ impl Format {
         format.load(path).map_err(From::from)
     }
 
+    pub fn print<T: Serialize>(self, input: &T) -> Result<(), SerializeError> {
+        let string = self.serialize(input)?;
+        Ok(print!("{}", string))
+    }
+
+    pub fn eprint<T: Serialize>(self, input: &T) -> Result<(), SerializeError> {
+        let string = self.serialize(input)?;
+        Ok(eprint!("{}", string))
+    }
+
+    pub fn println<T: Serialize>(self, input: &T) -> Result<(), SerializeError> {
+        let string = self.serialize(input)?;
+        Ok(println!("{}", string))
+    }
+
+    pub fn eprintln<T: Serialize>(self, input: &T) -> Result<(), SerializeError> {
+        let string = self.serialize(input)?;
+        Ok(eprintln!("{}", string))
+    }
+
     #[allow(unreachable_patterns, unused_variables, unreachable_code)]
     pub fn serialize<T: Serialize>(self, input: &T) -> Result<String, SerializeError> {
         Ok(match self {
