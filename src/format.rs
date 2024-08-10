@@ -82,6 +82,16 @@ impl Format {
         Ok(eprintln!("{}", string))
     }
 
+    pub fn write<T: Serialize>(self, input: &T, writer: &mut impl Write) -> Result<(), SaveError> {
+        let string = self.serialize(input)?;
+        Ok(write!(writer, "{}", string)?)
+    }
+
+    pub fn writeln<T: Serialize>(self, input: &T, writer: &mut impl Write) -> Result<(), SaveError> {
+        let string = self.serialize(input)?;
+        Ok(writeln!(writer, "{}", string)?)
+    }
+
     #[allow(unreachable_patterns, unused_variables, unreachable_code)]
     pub fn serialize<T: Serialize>(self, input: &T) -> Result<String, SerializeError> {
         Ok(match self {
