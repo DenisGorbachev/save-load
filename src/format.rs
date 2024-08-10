@@ -34,21 +34,21 @@ pub enum Format {
 }
 
 impl Format {
-    pub fn save<T: Serialize>(self, value: &T, path: impl AsRef<Path>) -> Result<(), SaveError> {
+    pub fn save<T: Serialize>(self, path: impl AsRef<Path>, value: &T) -> Result<(), SaveError> {
         let mut file = File::create(path)?;
         let output = self.serialize(value)?;
         file.write_all(output.as_bytes())?;
         Ok(())
     }
 
-    pub fn save_as<T: Serialize>(value: &T, path: impl AsRef<Path>) -> Result<(), SaveAsError> {
+    pub fn save_as<T: Serialize>(path: impl AsRef<Path>, value: &T) -> Result<(), SaveAsError> {
         let format = Format::try_from_path(path.as_ref())?;
-        format.save(value, path).map_err(From::from)
+        format.save(path, value).map_err(From::from)
     }
 
-    pub fn save_to<T: Serialize>(self, value: &T, file_dir: impl AsRef<Path>, file_stem: &str) -> Result<(), SaveError> {
+    pub fn save_to<T: Serialize>(self, file_dir: impl AsRef<Path>, file_stem: &str, value: &T) -> Result<(), SaveError> {
         let path_buf = file_dir.as_ref().join(self.to_file_name(file_stem));
-        self.save(value, path_buf)
+        self.save(path_buf, value)
     }
 
     pub fn load<T: DeserializeOwned>(self, path: impl AsRef<Path>) -> Result<T, LoadError> {
@@ -82,12 +82,12 @@ impl Format {
         Ok(eprintln!("{}", string))
     }
 
-    pub fn write<T: Serialize>(self, input: &T, writer: &mut impl Write) -> Result<(), SaveError> {
+    pub fn write<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveError> {
         let string = self.serialize(input)?;
         Ok(write!(writer, "{}", string)?)
     }
 
-    pub fn writeln<T: Serialize>(self, input: &T, writer: &mut impl Write) -> Result<(), SaveError> {
+    pub fn writeln<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveError> {
         let string = self.serialize(input)?;
         Ok(writeln!(writer, "{}", string)?)
     }
