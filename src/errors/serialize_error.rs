@@ -5,6 +5,8 @@ use derive_more::{Display, Error, From};
 pub enum SerializeError {
     #[cfg(feature = "serde_json")]
     SerdeJson(serde_json::Error),
+    #[cfg(feature = "serde-jsonlines")]
+    SerdeJsonlines(std::io::Error),
     #[cfg(feature = "serde_yaml")]
     SerdeYaml(serde_yaml::Error),
     #[cfg(feature = "serde-xml-rs")]

@@ -23,6 +23,8 @@ use crate::errors::unrecognized_extension_error::UnrecognizedExtensionError;
 pub enum Format {
     #[cfg(feature = "serde_json")]
     Json,
+    #[cfg(feature = "serde-jsonlines")]
+    Jsonl,
     #[cfg(feature = "serde_yaml")]
     Yaml,
     #[cfg(any(feature = "serde-xml-rs", feature = "quick-xml"))]
@@ -97,6 +99,13 @@ impl Format {
         Ok(match self {
             #[cfg(feature = "serde_json")]
             Format::Json => serde_json::to_string_pretty(input)?,
+            #[cfg(feature = "serde-jsonlines")]
+            Format::Jsonl => {
+                let mut buffer = Vec::new();
+                let mut ser = serde_jsonlines::JsonLinesWriter::new(&mut buffer);
+                ser.write(input).map_err(SerializeError::SerdeJsonlines)?;
+                String::from_utf8_lossy(&buffer).into_owned()
+            }
             #[cfg(feature = "serde_yaml")]
             Format::Yaml => serde_yaml::to_string(input)?,
             #[cfg(feature = "serde-xml-rs")]
@@ -122,6 +131,14 @@ impl Format {
         Ok(match self {
             #[cfg(feature = "serde_json")]
             Format::Json => serde_json::from_str(input)?,
+            #[cfg(feature = "serde-jsonlines")]
+            Format::Jsonl => {
+                let mut reader = serde_jsonlines::JsonLinesReader::new(input.as_bytes());
+                reader
+                    .read()
+                    .map_err(DeserializeError::SerdeJsonlines)?
+                    .ok_or::<DeserializeError>(crate::errors::item_not_found_error::ItemNotFoundError.into())?
+            }
             #[cfg(feature = "serde_yaml")]
             Format::Yaml => serde_yaml::from_str(input)?,
             #[cfg(feature = "serde-xml-rs")]
@@ -136,7 +153,7 @@ impl Format {
                 let mut reader = csv::Reader::from_reader(input.as_bytes());
                 let mut iter = reader.deserialize();
                 iter.next()
-                    .ok_or::<DeserializeError>(crate::errors::record_not_found_error::CsvRowNotFoundError.into())??
+                    .ok_or::<DeserializeError>(crate::errors::item_not_found_error::ItemNotFoundError.into())??
             }
         })
     }

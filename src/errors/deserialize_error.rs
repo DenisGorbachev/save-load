@@ -5,6 +5,8 @@ use derive_more::{Display, Error, From};
 pub enum DeserializeError {
     #[cfg(feature = "serde_json")]
     SerdeJson(serde_json::Error),
+    #[cfg(feature = "serde-jsonlines")]
+    SerdeJsonlines(std::io::Error),
     #[cfg(feature = "serde_yaml")]
     SerdeYaml(serde_yaml::Error),
     #[cfg(feature = "serde-xml-rs")]
@@ -15,6 +17,6 @@ pub enum DeserializeError {
     Toml(toml::de::Error),
     #[cfg(feature = "csv")]
     Csv(csv::Error),
-    #[cfg(feature = "csv")]
-    CsvRowNotFound(crate::errors::record_not_found_error::CsvRowNotFoundError),
+    #[cfg(any(feature = "csv", feature = "serde-jsonlines"))]
+    ItemNotFound(crate::errors::item_not_found_error::ItemNotFoundError),
 }
