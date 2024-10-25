@@ -162,6 +162,8 @@ impl Format {
         match self {
             #[cfg(feature = "serde_json")]
             Format::Json => "json",
+            #[cfg(feature = "serde-jsonlines")]
+            Format::Jsonl => "jsonl",
             #[cfg(feature = "serde_yaml")]
             Format::Yaml => "yaml",
             #[cfg(any(feature = "serde-xml-rs", feature = "quick-xml"))]
@@ -181,6 +183,8 @@ impl Format {
         match extension.to_str() {
             #[cfg(feature = "serde_json")]
             Some("json") => Ok(Format::Json),
+            #[cfg(feature = "serde-jsonlines")]
+            Some("jsonl") => Ok(Format::Jsonl),
             #[cfg(feature = "serde_yaml")]
             Some("yaml") | Some("yml") => Ok(Format::Yaml),
             #[cfg(any(feature = "serde-xml-rs", feature = "quick-xml"))]
