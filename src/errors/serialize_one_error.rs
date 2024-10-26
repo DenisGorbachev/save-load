@@ -2,7 +2,7 @@ use derive_more::{Display, Error, From};
 
 #[derive(Error, Display, From, Debug)]
 #[non_exhaustive]
-pub enum SerializeError {
+pub enum SerializeOneError {
     #[cfg(feature = "serde_json")]
     SerdeJson(serde_json::Error),
     #[cfg(feature = "serde-jsonlines")]

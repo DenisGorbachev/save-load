@@ -1,24 +1,25 @@
-use std::ffi::OsStr;
-use std::fs::{read_to_string, File};
-use std::io::Write;
-use std::path::Path;
-
-use serde::de::DeserializeOwned;
-use serde::{Deserialize, Serialize};
-
-use crate::errors::deserialize_error::DeserializeError;
+use crate::errors::deserialize_many_error::DeserializeManyError;
+use crate::errors::deserialize_one_error::DeserializeOneError;
 use crate::errors::load_as_error::LoadAsError;
 use crate::errors::load_error::LoadError;
 use crate::errors::path_has_no_extension_error::PathHasNoExtensionError;
 use crate::errors::save_as_error::SaveAsError;
 use crate::errors::save_error::SaveError;
-use crate::errors::serialize_error::SerializeError;
+use crate::errors::serialize_many_error::SerializeManyError;
+use crate::errors::serialize_one_error::SerializeOneError;
 use crate::errors::try_from_path_error::TryFromPathError;
 use crate::errors::unrecognized_extension_error::UnrecognizedExtensionError;
+use crate::errors::unsupported_format_error::UnsupportedFormatError;
+use serde::de::DeserializeOwned;
+use serde::{Deserialize, Serialize};
+use std::ffi::OsStr;
+use std::fs::{read_to_string, File};
+use std::io::{BufRead, Write};
+use std::path::Path;
+use strum::Display;
 
-#[derive(Serialize, Deserialize, Ord, PartialOrd, Eq, PartialEq, Hash, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Display, Ord, PartialOrd, Eq, PartialEq, Hash, Clone, Copy, Debug)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
-#[cfg_attr(feature = "strum", derive(strum::Display))]
 #[non_exhaustive]
 pub enum Format {
     #[cfg(feature = "serde_json")]
@@ -38,7 +39,7 @@ pub enum Format {
 impl Format {
     pub fn save<T: Serialize>(self, path: impl AsRef<Path>, value: &T) -> Result<(), SaveError> {
         let mut file = File::create(path)?;
-        let output = self.serialize(value)?;
+        let output = self.serialize_one(value)?;
         file.write_all(output.as_bytes())?;
         Ok(())
     }
@@ -55,7 +56,7 @@ impl Format {
 
     pub fn load<T: DeserializeOwned>(self, path: impl AsRef<Path>) -> Result<T, LoadError> {
         let string = read_to_string(path)?;
-        let output = self.deserialize(&string)?;
+        let output = self.deserialize_one(&string)?;
         Ok(output)
     }
 
@@ -64,38 +65,38 @@ impl Format {
         format.load(path).map_err(From::from)
     }
 
-    pub fn print<T: Serialize>(self, input: &T) -> Result<(), SerializeError> {
-        let string = self.serialize(input)?;
+    pub fn print<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
+        let string = self.serialize_one(input)?;
         Ok(print!("{}", string))
     }
 
-    pub fn eprint<T: Serialize>(self, input: &T) -> Result<(), SerializeError> {
-        let string = self.serialize(input)?;
+    pub fn eprint<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
+        let string = self.serialize_one(input)?;
         Ok(eprint!("{}", string))
     }
 
-    pub fn println<T: Serialize>(self, input: &T) -> Result<(), SerializeError> {
-        let string = self.serialize(input)?;
+    pub fn println<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
+        let string = self.serialize_one(input)?;
         Ok(println!("{}", string))
     }
 
-    pub fn eprintln<T: Serialize>(self, input: &T) -> Result<(), SerializeError> {
-        let string = self.serialize(input)?;
+    pub fn eprintln<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
+        let string = self.serialize_one(input)?;
         Ok(eprintln!("{}", string))
     }
 
     pub fn write<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveError> {
-        let string = self.serialize(input)?;
+        let string = self.serialize_one(input)?;
         Ok(write!(writer, "{}", string)?)
     }
 
     pub fn writeln<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveError> {
-        let string = self.serialize(input)?;
+        let string = self.serialize_one(input)?;
         Ok(writeln!(writer, "{}", string)?)
     }
 
     #[allow(unreachable_patterns, unused_variables, unreachable_code)]
-    pub fn serialize<T: Serialize>(self, input: &T) -> Result<String, SerializeError> {
+    pub fn serialize_one<T: Serialize>(self, input: &T) -> Result<String, SerializeOneError> {
         Ok(match self {
             #[cfg(feature = "serde_json")]
             Format::Json => serde_json::to_string_pretty(input)?,
@@ -103,7 +104,8 @@ impl Format {
             Format::Jsonl => {
                 let mut buffer = Vec::new();
                 let mut ser = serde_jsonlines::JsonLinesWriter::new(&mut buffer);
-                ser.write(input).map_err(SerializeError::SerdeJsonlines)?;
+                ser.write(input)
+                    .map_err(SerializeOneError::SerdeJsonlines)?;
                 String::from_utf8_lossy(&buffer).into_owned()
             }
             #[cfg(feature = "serde_yaml")]
@@ -127,7 +129,50 @@ impl Format {
     }
 
     #[allow(unreachable_patterns, unused_variables, unreachable_code)]
-    pub fn deserialize<T: DeserializeOwned>(self, input: &str) -> Result<T, DeserializeError> {
+    pub fn serialize_many_to_writer<'a, T: Serialize + 'a>(self, input: impl IntoIterator<Item = &'a T>, writer: &mut impl Write) -> Result<(), SerializeManyError> {
+        let items = input.into_iter();
+        match self {
+            #[cfg(feature = "serde_json")]
+            Format::Json => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "serde-jsonlines")]
+            Format::Jsonl => {
+                let mut writer = serde_jsonlines::JsonLinesWriter::new(writer);
+                for item in items {
+                    writer.write(item)?;
+                }
+                Ok(())
+            }
+            #[cfg(feature = "serde_yaml")]
+            Format::Yaml => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "serde-xml-rs")]
+            Format::Xml => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "quick-xml")]
+            Format::Xml => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "toml")]
+            Format::Toml => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "csv")]
+            Format::Csv => {
+                let mut writer = csv::Writer::from_writer(writer);
+                for item in items {
+                    writer.serialize(item)?;
+                }
+                Ok(())
+            }
+        }
+    }
+
+    #[allow(unreachable_patterns, unused_variables, unreachable_code)]
+    pub fn deserialize_one<T: DeserializeOwned>(self, input: &str) -> Result<T, DeserializeOneError> {
         Ok(match self {
             #[cfg(feature = "serde_json")]
             Format::Json => serde_json::from_str(input)?,
@@ -136,8 +181,8 @@ impl Format {
                 let mut reader = serde_jsonlines::JsonLinesReader::new(input.as_bytes());
                 reader
                     .read()
-                    .map_err(DeserializeError::SerdeJsonlines)?
-                    .ok_or::<DeserializeError>(crate::errors::item_not_found_error::ItemNotFoundError.into())?
+                    .map_err(DeserializeOneError::SerdeJsonlines)?
+                    .ok_or::<DeserializeOneError>(crate::errors::item_not_found_error::ItemNotFoundError.into())?
             }
             #[cfg(feature = "serde_yaml")]
             Format::Yaml => serde_yaml::from_str(input)?,
@@ -153,7 +198,49 @@ impl Format {
                 let mut reader = csv::Reader::from_reader(input.as_bytes());
                 let mut iter = reader.deserialize();
                 iter.next()
-                    .ok_or::<DeserializeError>(crate::errors::item_not_found_error::ItemNotFoundError.into())??
+                    .ok_or::<DeserializeOneError>(crate::errors::item_not_found_error::ItemNotFoundError.into())??
+            }
+        })
+    }
+
+    #[allow(unreachable_patterns, unused_variables, unreachable_code)]
+    pub fn deserialize_many_from_reader<'a, T: DeserializeOwned + 'a>(self, reader: &'a mut impl BufRead) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>> + 'a>, DeserializeManyError> {
+        Ok(match self {
+            #[cfg(feature = "serde_json")]
+            Format::Json => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "serde-jsonlines")]
+            Format::Jsonl => {
+                let reader = serde_jsonlines::JsonLinesReader::new(reader);
+                let iter = reader
+                    .read_all()
+                    .map(|x| x.map_err(DeserializeOneError::SerdeJsonlines));
+                Box::new(iter)
+            }
+            #[cfg(feature = "serde_yaml")]
+            Format::Yaml => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "serde-xml-rs")]
+            Format::Xml => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "quick-xml")]
+            Format::Xml => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "toml")]
+            Format::Toml => Err(UnsupportedFormatError {
+                format: self,
+            })?,
+            #[cfg(feature = "csv")]
+            Format::Csv => {
+                // NOTE: The input must contain the columns
+                let iter = csv::Reader::from_reader(reader)
+                    .into_deserialize()
+                    .map(|result| result.map_err(DeserializeOneError::Csv));
+                Box::new(iter)
             }
         })
     }
