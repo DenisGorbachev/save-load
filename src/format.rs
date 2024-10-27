@@ -1,10 +1,12 @@
 use crate::errors::deserialize_many_error::DeserializeManyError;
 use crate::errors::deserialize_one_error::DeserializeOneError;
-use crate::errors::load_as_error::LoadAsError;
-use crate::errors::load_error::LoadError;
+use crate::errors::load_many_as_error::LoadManyAsError;
+use crate::errors::load_many_error::LoadManyError;
+use crate::errors::load_one_as_error::LoadOneAsError;
+use crate::errors::load_one_error::LoadOneError;
 use crate::errors::path_has_no_extension_error::PathHasNoExtensionError;
-use crate::errors::save_as_error::SaveAsError;
-use crate::errors::save_error::SaveError;
+use crate::errors::save_one_as_error::SaveOneAsError;
+use crate::errors::save_one_error::SaveOneError;
 use crate::errors::serialize_many_error::SerializeManyError;
 use crate::errors::serialize_one_error::SerializeOneError;
 use crate::errors::try_from_path_error::TryFromPathError;
@@ -14,7 +16,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsStr;
 use std::fs::{read_to_string, File};
-use std::io::{BufRead, Write};
+use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use strum::Display;
 
@@ -37,60 +39,72 @@ pub enum Format {
 }
 
 impl Format {
-    pub fn save<T: Serialize>(self, path: impl AsRef<Path>, value: &T) -> Result<(), SaveError> {
+    pub fn save_one<T: Serialize>(self, path: impl AsRef<Path>, value: &T) -> Result<(), SaveOneError> {
         let mut file = File::create(path)?;
         let output = self.serialize_one(value)?;
         file.write_all(output.as_bytes())?;
         Ok(())
     }
 
-    pub fn save_as<T: Serialize>(path: impl AsRef<Path>, value: &T) -> Result<(), SaveAsError> {
+    pub fn save_one_as<T: Serialize>(path: impl AsRef<Path>, value: &T) -> Result<(), SaveOneAsError> {
         let format = Format::try_from_path(path.as_ref())?;
-        format.save(path, value).map_err(From::from)
+        format.save_one(path, value).map_err(From::from)
     }
 
-    pub fn save_to<T: Serialize>(self, file_dir: impl AsRef<Path>, file_stem: &str, value: &T) -> Result<(), SaveError> {
+    pub fn save_one_to<T: Serialize>(self, file_dir: impl AsRef<Path>, file_stem: &str, value: &T) -> Result<(), SaveOneError> {
         let path_buf = file_dir.as_ref().join(self.to_file_name(file_stem));
-        self.save(path_buf, value)
+        self.save_one(path_buf, value)
     }
 
-    pub fn load<T: DeserializeOwned>(self, path: impl AsRef<Path>) -> Result<T, LoadError> {
+    pub fn load_one<T: DeserializeOwned>(self, path: impl AsRef<Path>) -> Result<T, LoadOneError> {
         let string = read_to_string(path)?;
         let output = self.deserialize_one(&string)?;
         Ok(output)
     }
 
-    pub fn load_as<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result<T, LoadAsError> {
-        let format = Format::try_from_path(path.as_ref())?;
-        format.load(path).map_err(From::from)
+    pub fn load_many<T: DeserializeOwned + 'static>(self, path: impl AsRef<Path>) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>>>, LoadManyError> {
+        let file = File::open(path)?;
+        let reader = BufReader::new(file);
+        let output = self.deserialize_many_from_reader(reader)?;
+        Ok(output)
     }
 
-    pub fn print<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
+    pub fn load_one_as<T: DeserializeOwned>(path: impl AsRef<Path>) -> Result<T, LoadOneAsError> {
+        let format = Format::try_from_path(path.as_ref())?;
+        format.load_one(path).map_err(From::from)
+    }
+
+    pub fn load_many_as<T: DeserializeOwned + 'static>(path: impl AsRef<Path>) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>>>, LoadManyAsError> {
+        let format = Format::try_from_path(path.as_ref())?;
+        format.load_many(path).map_err(From::from)
+    }
+
+    pub fn print_one<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
         let string = self.serialize_one(input)?;
         Ok(print!("{}", string))
     }
 
-    pub fn eprint<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
+    pub fn eprint_one<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
         let string = self.serialize_one(input)?;
         Ok(eprint!("{}", string))
     }
 
-    pub fn println<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
+    pub fn println_one<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
         let string = self.serialize_one(input)?;
         Ok(println!("{}", string))
     }
 
-    pub fn eprintln<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
+    pub fn eprintln_one<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
         let string = self.serialize_one(input)?;
         Ok(eprintln!("{}", string))
     }
 
-    pub fn write<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveError> {
+    pub fn write_one<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveOneError> {
         let string = self.serialize_one(input)?;
         Ok(write!(writer, "{}", string)?)
     }
 
-    pub fn writeln<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveError> {
+    pub fn writeln_one<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveOneError> {
         let string = self.serialize_one(input)?;
         Ok(writeln!(writer, "{}", string)?)
     }
@@ -204,7 +218,7 @@ impl Format {
     }
 
     #[allow(unreachable_patterns, unused_variables, unreachable_code)]
-    pub fn deserialize_many_from_reader<'a, T: DeserializeOwned + 'a>(self, reader: &'a mut impl BufRead) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>> + 'a>, DeserializeManyError> {
+    pub fn deserialize_many_from_reader<T: DeserializeOwned + 'static>(self, reader: impl BufRead + 'static) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>>>, DeserializeManyError> {
         Ok(match self {
             #[cfg(feature = "serde_json")]
             Format::Json => Err(UnsupportedFormatError {

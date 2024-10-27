@@ -1,11 +1,13 @@
 pub mod deserialize_many_error;
 pub mod deserialize_one_error;
 pub mod item_not_found_error;
-pub mod load_as_error;
-pub mod load_error;
+pub mod load_many_as_error;
+pub mod load_many_error;
+pub mod load_one_as_error;
+pub mod load_one_error;
 pub mod path_has_no_extension_error;
-pub mod save_as_error;
-pub mod save_error;
+pub mod save_one_as_error;
+pub mod save_one_error;
 pub mod serialize_many_error;
 pub mod serialize_one_error;
 pub mod try_from_path_error;
