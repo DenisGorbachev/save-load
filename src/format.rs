@@ -80,32 +80,38 @@ impl Format {
 
     pub fn print_one<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
         let string = self.serialize_one(input)?;
-        Ok(print!("{}", string))
+        print!("{string}");
+        Ok(())
     }
 
     pub fn eprint_one<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
         let string = self.serialize_one(input)?;
-        Ok(eprint!("{}", string))
+        eprint!("{string}");
+        Ok(())
     }
 
     pub fn println_one<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
         let string = self.serialize_one(input)?;
-        Ok(println!("{}", string))
+        println!("{string}");
+        Ok(())
     }
 
     pub fn eprintln_one<T: Serialize>(self, input: &T) -> Result<(), SerializeOneError> {
         let string = self.serialize_one(input)?;
-        Ok(eprintln!("{}", string))
+        eprintln!("{string}");
+        Ok(())
     }
 
     pub fn write_one<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveOneError> {
         let string = self.serialize_one(input)?;
-        Ok(write!(writer, "{}", string)?)
+        write!(writer, "{string}")?;
+        Ok(())
     }
 
     pub fn writeln_one<T: Serialize>(self, writer: &mut impl Write, input: &T) -> Result<(), SaveOneError> {
         let string = self.serialize_one(input)?;
-        Ok(writeln!(writer, "{}", string)?)
+        writeln!(writer, "{string}")?;
+        Ok(())
     }
 
     #[allow(unreachable_patterns, unused_variables, unreachable_code)]
