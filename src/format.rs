@@ -222,7 +222,7 @@ impl Format {
         })
     }
 
-    #[allow(unreachable_patterns, unused_variables, unreachable_code)]
+    #[allow(unreachable_patterns, unused_variables, unreachable_code, unused_mut)]
     pub fn deserialize_many_from_reader<T: DeserializeOwned + 'static>(self, mut reader: impl BufRead + 'static) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>>>, DeserializeManyError> {
         Ok(match self {
             #[cfg(feature = "serde_json")]
