@@ -223,7 +223,7 @@ impl Format {
     }
 
     #[allow(unreachable_patterns, unused_variables, unreachable_code)]
-    pub fn deserialize_many_from_reader<T: DeserializeOwned + 'static>(self, reader: impl BufRead + 'static) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>>>, DeserializeManyError> {
+    pub fn deserialize_many_from_reader<T: DeserializeOwned + 'static>(self, mut reader: impl BufRead + 'static) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>>>, DeserializeManyError> {
         Ok(match self {
             #[cfg(feature = "serde_json")]
             Format::Json => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
@@ -250,9 +250,17 @@ impl Format {
                 format: self,
             })?,
             #[cfg(feature = "toml")]
-            Format::Toml => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
-                format: self,
-            })?,
+            Format::Toml => {
+                // crate::errors::unsupported_format_error::UnsupportedFormatError {
+                //     format: self,
+                // }.into()
+                // TODO: TOML doesn't support line-by-line deserialization, so using it with reader doesn't make sense
+                // TODO: Decide on how to handle such formats (most likely )
+                let mut s = String::new();
+                reader.read_to_string(&mut s)?;
+                let vec = self.deserialize_one::<Vec<T>>(&s)?;
+                Box::new(vec.into_iter().map(Ok))
+            }
             #[cfg(feature = "csv")]
             Format::Csv => {
                 // NOTE: The input must contain the columns
