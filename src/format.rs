@@ -17,9 +17,9 @@ use std::ffi::OsStr;
 use std::fs::{read_to_string, File};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
-use strum::Display;
+use strum::{Display, VariantArray};
 
-#[derive(Serialize, Deserialize, Display, Ord, PartialOrd, Eq, PartialEq, Hash, Clone, Copy, Debug)]
+#[derive(Serialize, Deserialize, Display, VariantArray, Ord, PartialOrd, Eq, PartialEq, Hash, Clone, Copy, Debug)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 #[non_exhaustive]
 pub enum Format {
