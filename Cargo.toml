@@ -15,6 +15,7 @@ title = "Read & write files in JSON, YAML, XML, and TOML formats"
 tagline = ""
 summary = ""
 announcement = ""
+readme = { generate = false }
 
 [dependencies]
 clap = { version = "4.0.0", optional = true, features = ["derive"] }
