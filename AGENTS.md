@@ -1467,6 +1467,7 @@ pub use functions::*;
 ## Project files
 
 <file><path>Cargo.toml</path><contents>
+```toml
 [package]
 name = "rust-private-lib-template"
 version = "0.1.0"
@@ -1525,8 +1526,9 @@ ignored = [
     "stub-macro",
     "subtype"
 ]
-</contents></file>
+```</contents></file>
 
 <file><path>src/lib.rs</path><contents>
+```rust
 //! This is a module-level comment for a Rust lib
-</contents></file>
+```</contents></file>
