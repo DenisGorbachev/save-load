@@ -45,8 +45,15 @@ const shiftHeadings = async (markdown: string) => {
 const renderCodeFile = (path: string, contents: string) => {
   const identifier = getLanguageIdentifier(path)
   const trimmed = contents.trimEnd()
-  const fenced = `\`\`\`${identifier}\n${trimmed}\n\`\`\``
+  const fence = getFence(trimmed)
+  const fenced = `${fence}${identifier}\n${trimmed}\n${fence}`
   return renderXmlFile(path, fenced)
+}
+
+const getFence = (contents: string) => {
+  const matches = contents.match(/`+/g) ?? []
+  const max = matches.reduce((current, match) => Math.max(current, match.length), 0)
+  return "`".repeat(Math.max(3, max + 1))
 }
 
 const getLanguageIdentifier = (path: string) => {
