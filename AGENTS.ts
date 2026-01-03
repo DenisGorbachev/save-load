@@ -47,7 +47,7 @@ const renderCodeFile = (path: string, contents: string) => {
   const trimmed = contents.trimEnd()
   const fence = getFence(trimmed)
   const fenced = `${fence}${identifier}\n${trimmed}\n${fence}`
-  return renderXmlFile(path, fenced)
+  return [`### ${path}`, fenced].join("\n\n")
 }
 
 const getFence = (contents: string) => {
