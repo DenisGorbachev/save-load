@@ -6,6 +6,7 @@ import remarkHeadingShift from "npm:remark-heading-shift@1.1.2"
 import remarkParse from "npm:remark-parse@11.0.0"
 import remarkStringify from "npm:remark-stringify@11.0.0"
 import {unified} from "npm:unified@11.0.5"
+import {extname} from "jsr:@std/path@1.1.4"
 
 const args = parseArgs(Deno.args, {
   string: ["output"],
@@ -41,6 +42,36 @@ const shiftHeadings = async (markdown: string) => {
   return String(file).trimEnd()
 }
 
+const renderCodeFile = (path: string, contents: string) => {
+  const identifier = getLanguageIdentifier(path)
+  const trimmed = contents.trimEnd()
+  const fence = getFence(trimmed)
+  const fenced = `${fence}${identifier}\n${trimmed}\n${fence}`
+  return [`### ${path}`, fenced].join("\n\n")
+}
+
+const getFence = (contents: string) => {
+  const matches = contents.match(/`+/g) ?? []
+  const max = matches.reduce((current, match) => Math.max(current, match.length), 0)
+  return "`".repeat(Math.max(3, max + 1))
+}
+
+const getLanguageIdentifier = (path: string) => {
+  const extension = extname(path)
+  switch (extension) {
+    case ".ts":
+      return "typescript"
+    case ".rs":
+      return "rust"
+    case ".xml":
+      return "xml"
+    case ".toml":
+      return "toml"
+    default:
+      throw new Error(`Could not get a language identifier for extension: ${extension}`)
+  }
+}
+
 const renderXmlFile = (path: string, contents: string) =>
   stringify(
     {
@@ -62,7 +93,7 @@ const includeFile = async (path: string) => {
   if (isMarkdownPath(path)) {
     return await shiftHeadings(contents)
   }
-  return renderXmlFile(path, contents)
+  return renderCodeFile(path, contents)
 }
 
 const includeFileIfExists = async (path: string) => {
