@@ -1500,12 +1500,11 @@ readme = { generate = false }
 [dependencies]
 derive-getters = { version = "0.5.0", features = ["auto_copy_getters"] }
 derive-new = "0.7.0"
-derive_more = { version = "2.0.1", features = ["full"] }
+derive_more = { version = "2.1.1", features = ["full"] }
 errgonomic = { git = "https://github.com/DenisGorbachev/errgonomic" }
-fmt-derive = "0.1.2"
 standard-traits = { git = "https://github.com/DenisGorbachev/standard-traits" }
-strum = { version = "0.27.1", features = ["derive"] }
-stub-macro = { version = "0.1.3" }
+strum = { version = "0.27.2", features = ["derive"] }
+stub-macro = { version = "0.2.1" }
 subtype = { git = "https://github.com/DenisGorbachev/subtype" }
 
 [package.metadata.cargo-machete]
@@ -1513,7 +1512,6 @@ ignored = [
     "derive-getters",
     "derive-new",
     "derive_more",
-    "fmt-derive",
     "errgonomic",
     "standard-traits",
     "strum",
