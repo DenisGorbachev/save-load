@@ -103,18 +103,18 @@ pub enum SubcommandRunError {
 
 A struct that contains fields for CLI arguments.
 
-- Must have a name that is a reverse concatenation of all command names leading up to and including this command name, and ends with `Command` (see example above)
+- Must have a name that is a concatenation of all command names leading up to and including this command name, and ends with `Command` (see example above)
 - Must derive `Parser` from `clap`
-- Must be attached as a child module to the parent command struct (or src/lib.rs if it's a top-level `Command`)
+- Must be attached to a parent module: if it's a top-level command: `src/lib.rs`, else: `src/command.rs`
 - May contain a `subcommand` field annotated with `#[command(subcommand)]`
 - Must have a `pub async fn run`
   - Must return a `Result`
 
 Command example:
 
-- Shell command: `cargo run -- db download ddproperty`
-- Name: `DDPropertyDownloadDbCommand`
-- File: `src/cli/db_command/download_db_command/ddproperty_download_db_command.rs`
+- Shell command: `cargo run -- db download ycombinator-startups`
+- Name: `DbDownloadYcombinatorStartupsCommand`
+- File: `src/command/db_download_ycombinator_startups_command.rs` (attached to `src/command.rs`)
 
 ### Subcommand-like enum
 
