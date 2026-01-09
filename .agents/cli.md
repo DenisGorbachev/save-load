@@ -42,7 +42,7 @@ Command example:
 An enum that contains variants for CLI subcommands.
 
 - Must have a name that is a reverse concatenation of all command names leading up to and including this command name, and ends with `Subcommand` (see example below)
-- Must derive `Subcommand` from `clap`
+- Must derive `Parser` from `clap`
 - Must be located in the same file as its parent command struct
 - Each variant must be a tuple variant containing exactly one subcommand
 - Must have a `pub async fn run`
