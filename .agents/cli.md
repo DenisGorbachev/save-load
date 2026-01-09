@@ -10,7 +10,7 @@
 ### File `src/main.rs`
 
 - Must define a `main` entrypoint
-- Must define a test for the top-level command
+- Must define a basic test for the top-level command
 
 Example:
 
@@ -42,20 +42,17 @@ fn verify_cli() {
 Example:
 
 ```rust
-use Subcommand::*;
-use clap::Parser;
 use errgonomic::map_err;
 use thiserror::Error;
+use Subcommand::*;
 
 mod print_command;
 
 pub use print_command::*;
 
-#[derive(Parser, Debug)]
+#[derive(clap::Parser, Debug)]
 #[command(author, version, about)]
 pub struct Command {
-    // #[arg(short, long, value_parser = value_parser!(PathBuf))]
-    // root: Option<PathBuf>,
     #[command(subcommand)]
     command: Subcommand,
 }
@@ -70,7 +67,7 @@ impl Command {
     }
 }
 
-#[derive(Parser, Clone, Debug)]
+#[derive(clap::Subcommand, Clone, Debug)]
 pub enum Subcommand {
     Print(PrintCommand),
 }
@@ -104,7 +101,7 @@ pub enum SubcommandRunError {
 A struct that contains fields for CLI arguments.
 
 - Must have a name that is a concatenation of all command names leading up to and including this command name, and ends with `Command` (see example above)
-- Must derive `Parser` from `clap`
+- Must derive `clap::Parser`
 - Must be attached to a parent module: if it's a top-level command: `src/lib.rs`, else: `src/command.rs`
 - May contain a `subcommand` field annotated with `#[command(subcommand)]`
 - Must have a `pub async fn run`
@@ -121,7 +118,7 @@ Command example:
 An enum that contains variants for CLI subcommands.
 
 - Must have a name that is a reverse concatenation of all command names leading up to and including this command name, and ends with `Subcommand` (see example above)
-- Must derive `Parser` from `clap`
+- Must derive `clap::Subcommand`
 - Must be located in the same file as its parent command struct
 - Each variant must be a tuple variant containing exactly one subcommand
 - Must have a `pub async fn run`
