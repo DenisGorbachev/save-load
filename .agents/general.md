@@ -54,7 +54,19 @@ You are a senior Rust software architect. You write high-quality, production-rea
 ## Data flow
 
 * Don't hardcode the values (accept arguments instead)
-* Use `let` instead of `const`
+* Choose carefully between accepting a parameter VS defining a constant:
+  * Definitions:
+    * Parameters are execution details (the user may want to change them)
+    * Constants are implementation details (the user would never want to change them)
+  * Examples:
+    * Parameters:
+      * Cache TTL
+      * Config path
+    * Constants:
+      * Table name
+      * Keyspace name
+  * Recommendations:
+    * When in doubt, prefer accepting a parameter instead of defining a constant
 
 ## Struct derives
 
