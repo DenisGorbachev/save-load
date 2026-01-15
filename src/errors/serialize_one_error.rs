@@ -12,7 +12,7 @@ pub enum SerializeOneError {
     #[cfg(feature = "serde-xml-rs")]
     SerdeXmlRs(serde_xml_rs::Error),
     #[cfg(feature = "quick-xml")]
-    QuickXml(quick_xml::DeError),
+    QuickXml(quick_xml::SeError),
     #[cfg(feature = "toml")]
     Toml(toml::ser::Error),
     #[cfg(feature = "csv")]

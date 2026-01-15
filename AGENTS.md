@@ -238,6 +238,31 @@ You are running in a sandbox with limited network access.
 * See the list of allowed domains in /etc/dnsmasq.d/allowed\_domains.conf
 * If you need to read the data from other domains, use the web search tool (this tool is executed outside of sandbox)
 
+## Knowledge
+
+### General
+
+* Some formats do support deserializing a file in chunks
+  * Examples
+    * JSONL
+    * CSV
+* Some formats don't support deserializing a file in chunks
+  * Examples
+    * JSON
+    * XML
+    * TOML
+* Some formats do have clear delimiters for array values
+  * Examples
+    * XML: closing tag
+    * JSON: comma
+    * CSV: newline
+* Some formats don't have clear delimiters for array values
+  * Examples
+    * TOML
+* Some formats don't support arrays at the top level
+  * Examples
+    * TOML
+
 ## Error handling guidelines
 
 * Don't use `?` try operator - use the macros that begin with `handle`
@@ -1522,17 +1547,17 @@ announcement = ""
 readme = { generate = false }
 
 [dependencies]
-clap = { version = "4.0.0", optional = true, features = ["derive"] }
-csv = { version = "1.3.0", optional = true }
-derive_more = { version = "1.0.0", features = ["full"] }
-quick-xml = { version = "0.36.0", optional = true, features = ["serialize"] }
-serde = { version = "1.0.0", features = ["derive"] }
-serde-jsonlines = { version = "0.6.0", optional = true }
-serde-xml-rs = { version = "0.6.0", optional = true }
-serde_json = { version = "1.0.0", optional = true }
-serde_yaml = { version = "0.9.0", optional = true }
-strum = { version = "0.27.0", features = ["derive"] }
-toml = { version = "0.9.0", optional = true }
+clap = { version = "4.0", optional = true, features = ["derive"] }
+csv = { version = "1.0", optional = true }
+derive_more = { version = "2.0", features = ["full"] }
+quick-xml = { version = "0.39", optional = true, features = ["serialize"] }
+serde = { version = "1.0", features = ["derive"] }
+serde-jsonlines = { version = "0.7", optional = true }
+serde-xml-rs = { version = "0.8", optional = true }
+serde_json = { version = "1.0", optional = true }
+serde_yaml = { version = "0.9", optional = true }
+strum = { version = "0.27", features = ["derive"] }
+toml = { version = "0.9", optional = true }
 ```
 
 ### src/lib.rs
