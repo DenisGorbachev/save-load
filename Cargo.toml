@@ -9,6 +9,22 @@ repository = "https://github.com/DenisGorbachev/save-load"
 readme = "README.md"
 keywords = ["serde", "filesystem", "fs", "serialize", "format"]
 categories = ["filesystem", "rendering::data-formats", "value-formatting", "encoding", "rust-patterns"]
+exclude = [
+    ".*",
+    "*.local.*",
+    "doc/dev",
+    "specs",
+    "README.ts",
+    "AGENTS*.md",
+    "CLAUDE*.md",
+    "deno.json",
+    "commitlint.config.mjs",
+    "lefthook.yml",
+    "mise.toml",
+    "rumdl.toml",
+    "rustfmt.toml",
+    "yolobox"
+]
 
 [package.metadata.details]
 title = "Read & write files in JSON, YAML, XML, and TOML formats"
