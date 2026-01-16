@@ -1,18 +1,10 @@
 # Specification for this crate
 
-* Every format must be implemented as a unit struct with no fields
-  * Examples
-    * `Json`
-    * `Jsonl`
-    * `Toml`
-    * `Csv`
-* Every format must implement all conversion traits
-
 ## Definitions
 
 ### Payload
 
-Payload is a value that represents the data in volatile memory (e.g. RAM).
+Payload is an actual data value.
 
 Examples:
 
@@ -25,17 +17,17 @@ Examples:
 * `Box<T>`
 * `Box<[T]>`
 * `impl IntoIterator<Item = I>`
-* `impl Stream<Item = I>`
+* `impl futures::Stream<Item = I>`
 
 Notes:
 
 * Some payloads have generic types that implement specific traits
   * Examples
-    * `impl Stream<Item = I>`
+    * `impl futures::Stream<Item = I>`
 
 ### Storage
 
-Storage is a value that represents the data in persistent memory (e.g. on disk).
+Storage is a locator of the actual data value.
 
 Examples:
 
@@ -45,7 +37,7 @@ Examples:
 * `impl Read`
 * `impl BufRead`
 * `impl Write`
-* `impl BufWrite`
+* `std::io::BufWriter<W>`
 * `impl futures::io::AsyncRead`
 * `impl futures::io::AsyncWrite`
 * `impl tokio::io::AsyncRead`
@@ -62,16 +54,34 @@ Notes:
 * `futures::io::AsyncRead` and `tokio::io::AsyncRead` have different signatures
 * `futures::io::AsyncWrite` and `tokio::io::AsyncWrite` have different signatures
 
+### Format
+
+A set of rules for serializing and deserializing the [payload](#payload) in [storage](#storage).
+
+* Examples
+  * `Json`
+  * `Jsonl`
+  * `Toml`
+  * `Csv`
+
+Requirements:
+
+* Must be implemented as a unit struct with no fields
+
+Preferences:
+
+* Should implement as many conversion traits as possible
+
 ### Moniker
 
 Moniker is a string used in [conversion trait](#conversion-trait) name.
 
-If the item comes from a [foundational crate](#foundational-crate), then the item moniker is just the name of the item, else it's a concatentation of the crate name and an item name.
+If the item comes from a [foundational crate](#foundational-crate), then the item moniker is just the name of the item, else it's a concatentation of the crate name in PascalCase and an item name.
 
 Examples:
 
 * `std::fs::File` -> `File`
-* `std::iter::Iterator` -> `File`
+* `std::iter::Iterator` -> `Iterator`
 * `tokio::fs::File` -> `TokioFile`
 
 ### Conversion trait
@@ -84,13 +94,13 @@ Examples:
 * `FileToValue`
 * `ValueToTokioFile`
 * `TokioFileToValue`
-* `IterToFile`
+* `IteratorToFile`
 * `StreamToFile`
 * `StreamToPathBuf`
 
 Requirements:
 
-* Name must contain a [value](#payload) [moniker](#moniker)
+* Name must contain a [payload](#payload) [moniker](#moniker)
 * Name must contain a [storage](#storage) [moniker](#moniker)
 * Method should have generic parameters instead of `impl` parameters
 * Method generic parameters must have `T` as the first parameter
@@ -99,11 +109,10 @@ Requirements:
 
 Preferences:
 
-* Should accept an `impl Into*` instead of plain `&T` or `T`
-  * Examples
-    * `impl Into<P>` where `P: Borrow<T>`
-    * `impl IntoIterator<P>` where `P: Borrow<T>`
-* Should accept an `T, P: Borrow<T>` instead of plain `T` (to accept both references and owned values)
+* Should accept both references and owned values
+  * Examples:
+    * `V: Borrow<T>`
+    * `I: IntoIterator<Item = V>` where `V: Borrow<T>`
 * Should return every owned value that is created within the method
   * Examples
     * Should return the `File`
@@ -118,8 +127,8 @@ Notes:
   * Examples:
     * `ValueToTokioFile`
     * `StreamToFile`
-* Conversion from `Vec<T>` is covered by `Iter*` family of conversion traits, which accept `payload: impl IntoIterator`
-* Converson from `Box<T>` is covered by `Value*` family of conversion traits, which accept `payload: P` where `P: Borrow<T>`
+* Conversion from `Vec<T>` is covered by `Iterator*` family of conversion traits, which accept `iter: I` where `I: IntoIterator`
+* Converson from `Box<T>` is covered by `Value*` family of conversion traits, which accept `value: V` where `V: Borrow<T>`
 
 ### Mirror pair
 
@@ -134,7 +143,7 @@ Notes:
 
 Foundational crate is a crate that is (subjectively) very popular in the ecosystem.
 
-Examples:
+Values (exhaustive):
 
 * `std`
 * `futures`
