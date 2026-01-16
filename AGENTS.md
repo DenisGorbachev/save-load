@@ -1565,4 +1565,6 @@ toml = { version = "0.9", optional = true }
 ```rust
 pub mod errors;
 pub mod format;
+pub mod formats;
+pub mod traits;
 ```
