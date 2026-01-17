@@ -68,6 +68,8 @@ A set of rules for serializing and deserializing the [payload](#payload) in [sto
   * `Jsonl`
   * `Toml`
   * `Csv`
+  * `Yaml`
+  * `Xml`
 
 Requirements:
 
@@ -124,6 +126,7 @@ Examples:
 * `IteratorToFile`
 * `StreamToFile`
 * `StreamToPathBuf`
+* `ValueToPathBuf`
 
 Requirements:
 
@@ -140,9 +143,9 @@ Preferences:
   * Examples:
     * `V: Borrow<T>`
     * `I: IntoIterator<Item = V>` where `V: Borrow<T>`
-* Should return every owned value that is created within the method
+* Methods that write to storage should return every owned value that is created within the method
   * Examples
-    * Should return the `File`
+    * If the method creates a `File` for writing the payload, it should return it
 
 Notes:
 
@@ -155,7 +158,7 @@ Notes:
     * `StreamToFile`
 * Conversion from `Vec<T>` is covered by `Iterator*` family of conversion traits, which accept `iter: I` where `I: IntoIterator`
 * Conversion from `Box<T>` is covered by `Value*` family of conversion traits, which accept `value: V` where `V: Borrow<T>`
-* Async conversion traits must be implemented with `async fn` (not `#[async_trait]`)
+* Async conversion methods must return `impl Future` with explicit bounds
 
 ### Mirror pair
 
