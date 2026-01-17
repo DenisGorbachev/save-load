@@ -1550,6 +1550,7 @@ readme = { generate = false }
 clap = { version = "4.0", optional = true, features = ["derive"] }
 csv = { version = "1.0", optional = true }
 derive_more = { version = "2.0", features = ["full"] }
+errgonomic = "0.4.0"
 quick-xml = { version = "0.39", optional = true, features = ["serialize"] }
 serde = { version = "1.0", features = ["derive"] }
 serde-jsonlines = { version = "0.7", optional = true }
@@ -1557,6 +1558,7 @@ serde-xml-rs = { version = "0.8", optional = true }
 serde_json = { version = "1.0", optional = true }
 serde_yaml = { version = "0.9", optional = true }
 strum = { version = "0.27", features = ["derive"] }
+thiserror = "2.0.17"
 toml = { version = "0.9", optional = true }
 ```
 
@@ -1567,4 +1569,5 @@ pub mod errors;
 pub mod format;
 pub mod formats;
 pub mod traits;
+pub use traits::*;
 ```

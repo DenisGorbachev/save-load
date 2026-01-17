@@ -1,10 +1,14 @@
+use serde::de::DeserializeOwned;
 use std::fs::File;
 
 pub trait FileToIter {
-    type Output;
-    type Error;
-
-    fn file_to_iter<T, I>(&self, file: &File) -> Result<I, Self::Error>
+    type Output<T>: Iterator<Item = Result<T, Self::ItemError>>
     where
-        I: Iterator<Item = T>;
+        T: DeserializeOwned + 'static;
+    type Error;
+    type ItemError;
+
+    fn file_to_iter<T>(&self, file: &File) -> Result<Self::Output<T>, Self::Error>
+    where
+        T: DeserializeOwned + 'static;
 }
