@@ -16,14 +16,14 @@ Examples:
 * `VecDeque<T>`
 * `Box<T>`
 * `Box<[T]>`
-* `impl IntoIterator<Item = I>`
-* `impl futures::Stream<Item = I>`
+* `I: IntoIterator<Item = P>` where `P: Borrow<T>`
+* `S: futures::Stream<Item = P>` where `P: Borrow<T>`
 
 Notes:
 
 * Some payloads have generic types that implement specific traits
   * Examples
-    * `impl futures::Stream<Item = I>`
+    * `S: futures::Stream<Item = P>` where `P: Borrow<T>`
 
 ### Storage
 
@@ -72,11 +72,32 @@ Preferences:
 
 * Should implement as many conversion traits as possible
 
+### Inner type
+
+Inner type is the type being serialized / deserialized in the [payload](#payload).
+
+In the [payload definition](#payload), inner type is called `T`.
+
+### Outer item
+
+Outer item is the outermost item in the [payload](#payload).
+
+Notes:
+
+* Outer item may be a specific type or a generic type that implements a specific trait (e.g. a `T` or `I: IntoIterator<Item = P>` where `P: Borrow<T>`)
+
 ### Moniker
 
-Moniker is a string used in [conversion trait](#conversion-trait) name.
+Moniker is an identifier that is a part of [conversion trait](#conversion-trait) name.
 
-If the item comes from a [foundational crate](#foundational-crate), then the item moniker is just the name of the item, else it's a concatentation of the crate name in PascalCase and an item name.
+How to generate the monikers for a list of items:
+
+* Order the items by popularity descending (defined as count of dependents on crates.io)
+* For each item:
+  * Calculate the minimum possible moniker that is still available (not taken by another item):
+    * `{ident}` (primary identifier of the item) (e.g. `File`)
+    * `{crate}{ident}` (the crate name in PascalCase + primary identifier of the item) (e.g. `TokioFile`)
+    * `{path}{ident}` (the full path including the crate name in PascalCase + primary identifier of the item) (e.g. `TokioFsFile`)
 
 Examples:
 
@@ -119,7 +140,6 @@ Preferences:
 
 Notes:
 
-* Some round-trip pairs of conversion traits
 * Some conversion traits are sync
   * Examples:
     * `ValueToFile`
@@ -129,6 +149,7 @@ Notes:
     * `StreamToFile`
 * Conversion from `Vec<T>` is covered by `Iterator*` family of conversion traits, which accept `iter: I` where `I: IntoIterator`
 * Converson from `Box<T>` is covered by `Value*` family of conversion traits, which accept `value: V` where `V: Borrow<T>`
+* Async conversion traits must be implemented with `async fn` (not `#[async_trait]`)
 
 ### Mirror pair
 
@@ -136,14 +157,6 @@ Mirror pair is a pair of [conversion traits](#conversion-trait) where the first 
 
 Notes:
 
-* Mirror pairs must pass the round-trip test
+* Mirror pairs must pass the serialize-deserialize round-trip test
+* Mirror pairs may not pass a deserialize-serialize round-trip test for formats that accept the map keys in arbitrary order, and the key order information is lost during deserialization
 * Mirror pairs may have different `Error` types
-
-### Foundational crate
-
-Foundational crate is a crate that is (subjectively) very popular in the ecosystem.
-
-Values (exhaustive):
-
-* `std`
-* `futures`
