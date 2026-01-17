@@ -1,5 +1,10 @@
 # Specification for this crate
 
+## General
+
+* MSRV: 1.75
+  * Needs to support `async fn` in traits
+
 ## Definitions
 
 ### Payload
@@ -27,7 +32,7 @@ Notes:
 
 ### Storage
 
-Storage is a locator of the actual data value.
+Storage is an IO source/sink or location for serialized bytes of the actual data value.
 
 Examples:
 
@@ -67,6 +72,7 @@ A set of rules for serializing and deserializing the [payload](#payload) in [sto
 Requirements:
 
 * Must be implemented as a unit struct with no fields
+  * Note that configuration of the serialization/deserialization is explicitly not supported (must use sane defaults)
 
 Preferences:
 
@@ -92,7 +98,7 @@ Moniker is an identifier that is a part of [conversion trait](#conversion-trait)
 
 How to generate the monikers for a list of items:
 
-* Order the items by popularity descending (defined as count of dependents on crates.io)
+* Order the items by popularity descending (defined as count of dependents on crates.io on 2026-01-01)
 * For each item:
   * Calculate the minimum possible moniker that is still available (not taken by another item):
     * `{ident}` (primary identifier of the item) (e.g. `File`)
@@ -148,7 +154,7 @@ Notes:
     * `ValueToTokioFile`
     * `StreamToFile`
 * Conversion from `Vec<T>` is covered by `Iterator*` family of conversion traits, which accept `iter: I` where `I: IntoIterator`
-* Converson from `Box<T>` is covered by `Value*` family of conversion traits, which accept `value: V` where `V: Borrow<T>`
+* Conversion from `Box<T>` is covered by `Value*` family of conversion traits, which accept `value: V` where `V: Borrow<T>`
 * Async conversion traits must be implemented with `async fn` (not `#[async_trait]`)
 
 ### Mirror pair
