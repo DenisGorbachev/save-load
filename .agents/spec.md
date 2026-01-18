@@ -75,6 +75,9 @@ Requirements:
 
 * Must be implemented as a unit struct with no fields
   * Note that configuration of the serialization/deserialization is explicitly not supported (must use sane defaults)
+* Must be feature-gated
+  * The `cfg` attribute must be placed on the `mod` and `pub use` declarations (not on individual items)
+  * The corresponding dependency must be `optional`
 
 Preferences:
 
@@ -132,6 +135,9 @@ Requirements:
 
 * Name must contain a [payload](#payload) [moniker](#moniker)
 * Name must contain a [storage](#storage) [moniker](#moniker)
+* Associated types must have corresponding trait bounds
+  * Examples
+    * In `FileToIter` trait, the `Output` must have `Iterator` trait bound
 * Method should have generic parameters instead of `impl` parameters
 * Method generic parameters must have `T` as the first parameter
 * Method must return a `Result<Self::Output, Self::Error>`
