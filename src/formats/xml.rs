@@ -13,7 +13,7 @@ impl IterToFile for Xml {
     type Output = ();
     type Error = XmlIterToFileError;
 
-    fn iter_to_file<T, I>(&self, _file: &File, _iter: I) -> Result<<Self as IterToFile>::Output, <Self as IterToFile>::Error>
+    fn iter_to_file<T, I>(&self, _file: &File, _iter: I) -> Result<Self::Output, Self::Error>
     where
         T: Serialize,
         I: IntoIterator,
@@ -32,7 +32,7 @@ impl FileToIter for Xml {
     type Error = XmlFileToIterError;
     type ItemError = Infallible;
 
-    fn file_to_iter<T>(&self, _file: &File) -> Result<<Self as FileToIter>::Output<T>, <Self as FileToIter>::Error>
+    fn file_to_iter<T>(&self, _file: &File) -> Result<Self::Output<T>, Self::Error>
     where
         T: DeserializeOwned + 'static,
     {

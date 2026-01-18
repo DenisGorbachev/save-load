@@ -21,7 +21,7 @@ impl IterToFile for Json {
     type Output = ();
     type Error = JsonIterToFileError;
 
-    fn iter_to_file<T, I>(&self, file: &File, iter: I) -> Result<<Self as IterToFile>::Output, <Self as IterToFile>::Error>
+    fn iter_to_file<T, I>(&self, file: &File, iter: I) -> Result<Self::Output, Self::Error>
     where
         T: Serialize,
         I: IntoIterator,
@@ -49,7 +49,7 @@ impl FileToIter for Json {
     type Error = JsonFileToIterError;
     type ItemError = Infallible;
 
-    fn file_to_iter<T>(&self, file: &File) -> Result<<Self as FileToIter>::Output<T>, <Self as FileToIter>::Error>
+    fn file_to_iter<T>(&self, file: &File) -> Result<Self::Output<T>, Self::Error>
     where
         T: DeserializeOwned + 'static,
     {
