@@ -118,7 +118,7 @@ Examples:
 
 ### Conversion trait
 
-Conversion trait is a trait with functions that implement serialization and deserialization between a specific [payload](#payload) and a specific [storage](#storage).
+Conversion trait is a trait with a single fn that implements serialization or deserialization between a specific [payload](#payload) and a specific [storage](#storage).
 
 Examples:
 
@@ -149,6 +149,7 @@ Preferences:
   * Examples:
     * `V: Borrow<T>`
     * `I: IntoIterator<Item = V>` where `V: Borrow<T>`
+* Associated types should be specific types instead of trait objects (prefer specific types instead of `Box<dyn ...>` if possible)
 * Methods that write to storage should return every owned value that is created within the method
   * Examples
     * If the method creates a `File` for writing the payload, it should return it
@@ -170,8 +171,22 @@ Notes:
 
 Mirror pair is a pair of [conversion traits](#conversion-trait) where the first trait implements serialization and the second trait implements deserialization between the same [payload](#payload) and [storage](#storage).
 
+Examples:
+
+* `FileToIter` and `IterToFile`
+
 Notes:
 
 * Mirror pairs must pass the serialize-deserialize round-trip test
 * Mirror pairs may not pass a deserialize-serialize round-trip test for formats that accept the map keys in arbitrary order, and the key order information is lost during deserialization
 * Mirror pairs may have different `Error` types
+
+### Embedding pair
+
+Embedding pair is a pair of [conversion traits](#conversion-trait) where the both traits have the same inputs but different outputs, and the output of the first trait can be losslessly converted into the output of the second trait (i.e. there is an injection between output of first trait and the output of second trait).
+
+Examples:
+
+* `FileToIter` and `FileToIterOfOptions` (note that `T` can be losslessly converted into `Option<T>`)
+* `FileToIter` and `FileToIterOfResults` (note that `T` can be losslessly converted into `Result<T, E>`)
+* `FileToVec` and `FileToIter` (note that `Vec<T>` can be losslessly converted into `I: Iterator<Item = T>`)

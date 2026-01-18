@@ -21,4 +21,11 @@
     * TOML
 * Some formats don't support arrays at the top level
   * Examples
-    * TOML 
+    * TOML
+
+## Dependencies
+
+* `quick-xml` contains optional support of asynchronous reading and writing using tokio. To get it enable the `async-tokio` feature.
+* Some format implementations return iterators of `Result<T, E>` instead of iterators of `T`
+  * Examples
+    * `csv`

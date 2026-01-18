@@ -263,6 +263,13 @@ You are running in a sandbox with limited network access.
   * Examples
     * TOML
 
+### Dependencies
+
+* `quick-xml` contains optional support of asynchronous reading and writing using tokio. To get it enable the `async-tokio` feature.
+* Some format implementations return iterators of `Result<T, E>` instead of iterators of `T`
+  * Examples
+    * `csv`
+
 ## Error handling guidelines
 
 * Don't use `?` try operator - use the macros that begin with `handle`
