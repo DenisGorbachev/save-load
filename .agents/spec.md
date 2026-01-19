@@ -1,4 +1,4 @@
-# Specification for this crate
+# Package specification
 
 ## General
 
@@ -9,7 +9,7 @@
 
 ### Payload
 
-Payload is an actual data value.
+An actual data value.
 
 Examples:
 
@@ -32,7 +32,7 @@ Notes:
 
 ### Storage
 
-Storage is an IO source/sink or location for serialized bytes of the actual data value.
+An IO source/sink or location for serialized bytes of the actual data value.
 
 Examples:
 
@@ -63,13 +63,14 @@ Notes:
 
 A set of rules for serializing and deserializing the [payload](#payload) in [storage](#storage).
 
-* Examples
-  * `Json`
-  * `Jsonl`
-  * `Toml`
-  * `Csv`
-  * `Yaml`
-  * `Xml`
+Examples:
+
+* `Json`
+* `Jsonl`
+* `Toml`
+* `Csv`
+* `Yaml`
+* `Xml`
 
 Requirements:
 
@@ -85,9 +86,11 @@ Preferences:
 
 ### Inner type
 
-Inner type is the type being serialized / deserialized in the [payload](#payload).
+The type being serialized / deserialized in the [payload](#payload).
 
-In the [payload definition](#payload), inner type is called `T`.
+Notes:
+
+* In the [payload definition](#payload), inner type is called `T`.
 
 ### Outer item
 
@@ -99,16 +102,7 @@ Notes:
 
 ### Moniker
 
-Moniker is an identifier that is a part of [conversion trait](#conversion-trait) name.
-
-How to generate the monikers for a list of items:
-
-* Order the items by popularity descending (defined as count of dependents on crates.io on 2026-01-01)
-* For each item:
-  * Calculate the minimum possible moniker that is still available (not taken by another item):
-    * `{ident}` (primary identifier of the item) (e.g. `File`)
-    * `{crate}{ident}` (the crate name in PascalCase + primary identifier of the item) (e.g. `TokioFile`)
-    * `{path}{ident}` (the full path including the crate name in PascalCase + primary identifier of the item) (e.g. `TokioFsFile`)
+An identifier that is a part of [conversion trait](#conversion-trait) name.
 
 Examples:
 
@@ -116,9 +110,19 @@ Examples:
 * `std::iter::Iterator` -> `Iterator`
 * `tokio::fs::File` -> `TokioFile`
 
+Notes:
+
+* How to generate the monikers for a list of items:
+  * Order the items by popularity descending (defined as count of dependents on crates.io on 2026-01-01)
+  * For each item:
+    * Calculate the minimum possible moniker that is still available (not taken by another item):
+      * `{ident}` (primary identifier of the item) (e.g. `File`)
+      * `{crate}{ident}` (the crate name in PascalCase + primary identifier of the item) (e.g. `TokioFile`)
+      * `{path}{ident}` (the full path including the crate name in PascalCase + primary identifier of the item) (e.g. `TokioFsFile`)
+
 ### Conversion trait
 
-Conversion trait is a trait with a single fn that implements serialization or deserialization between a specific [payload](#payload) and a specific [storage](#storage).
+A trait with a single fn that implements serialization or deserialization between a specific [payload](#payload) and a specific [storage](#storage).
 
 Examples:
 
@@ -142,6 +146,7 @@ Requirements:
 * Method generic parameters must have `T` as the first parameter
 * Method must return a `Result<Self::Output, Self::Error>`
   * `Output` and `Error` must be associated types of the trait
+* Implementation code for error handling must use the handle-family macros from `errgonomic` crate (example: `use errgonomic::handle;` + `handle!(...)`)
 
 Preferences:
 
@@ -167,9 +172,13 @@ Notes:
 * Conversion from `Box<T>` is covered by `Value*` family of conversion traits, which accept `value: V` where `V: Borrow<T>`
 * Async conversion methods must return `impl Future` with explicit bounds
 
+### Conversion trait impl
+
+An implementation of a [conversion trait](#conversion-trait).
+
 ### Mirror pair
 
-Mirror pair is a pair of [conversion traits](#conversion-trait) where the first trait implements serialization and the second trait implements deserialization between the same [payload](#payload) and [storage](#storage).
+A pair of [conversion traits](#conversion-trait) where the first trait implements serialization and the second trait implements deserialization between the same [payload](#payload) and [storage](#storage).
 
 Examples:
 
@@ -183,7 +192,7 @@ Notes:
 
 ### Embedding pair
 
-Embedding pair is a pair of [conversion traits](#conversion-trait) where the both traits have the same inputs but different outputs, and the output of the first trait can be losslessly converted into the output of the second trait (i.e. there is an injection between output of first trait and the output of second trait).
+A pair of [conversion traits](#conversion-trait) where the both traits have the same inputs but different outputs, and the output of the first trait can be losslessly converted into the output of the second trait (i.e. there is an injection between output of first trait and the output of second trait).
 
 Examples:
 

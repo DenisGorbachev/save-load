@@ -1,20 +1,14 @@
-#[cfg(feature = "csv")]
-use crate::{FileToIter, IterToFile};
-#[cfg(feature = "csv")]
+use crate::{FileToIter, FileToIterOfResults, IterToFile};
+use errgonomic::ErrVec;
 use serde::de::DeserializeOwned;
-#[cfg(feature = "csv")]
 use serde::Serialize;
-#[cfg(feature = "csv")]
 use std::borrow::Borrow;
-#[cfg(feature = "csv")]
 use std::fs::File;
-#[cfg(feature = "csv")]
 use thiserror::Error;
 
 #[derive(Default, Eq, PartialEq, Ord, PartialOrd, Hash, Clone, Copy, Debug)]
 pub struct Csv;
 
-#[cfg(feature = "csv")]
 impl IterToFile for Csv {
     type Output = ();
     type Error = CsvIterToFileError;
@@ -36,32 +30,45 @@ impl IterToFile for Csv {
     }
 }
 
-#[cfg(feature = "csv")]
 impl FileToIter for Csv {
     type Output<T>
-        = Box<dyn Iterator<Item = Result<T, Self::ItemError>>>
+        = std::vec::IntoIter<T>
     where
         T: DeserializeOwned + 'static;
     type Error = CsvFileToIterError;
-    type ItemError = CsvFileToIterItemError;
 
-    fn file_to_iter<T>(&self, file: &File) -> Result<Self::Output<T>, Self::Error>
+    fn file_to_iter<T>(&self, file: &File) -> Result<<Self as FileToIter>::Output<T>, <Self as FileToIter>::Error>
     where
         T: DeserializeOwned + 'static,
     {
         use CsvFileToIterError::*;
-        use CsvFileToIterItemError::*;
-        let file_owned = errgonomic::handle!(file.try_clone(), TryCloneFailed);
-        let mut reader = csv::Reader::from_reader(file_owned);
-        let _headers = errgonomic::handle!(reader.headers(), HeadersFailed);
-        let iter = reader
-            .into_deserialize::<T>()
-            .map(|result| errgonomic::map_err!(result, DeserializeFailed));
-        Ok(Box::new(iter))
+        let iter = errgonomic::handle!(<Self as FileToIterOfResults>::file_to_iter_of_results(self, file), FileToIterOfResultsFailed);
+        let items = errgonomic::handle_iter!(iter, DeserializeFailed);
+        Ok(items.into_iter())
     }
 }
 
-#[cfg(feature = "csv")]
+impl FileToIterOfResults for Csv {
+    type Output<T>
+        = csv::DeserializeRecordsIntoIter<File, T>
+    where
+        T: DeserializeOwned + 'static;
+    type Error = CsvFileToIterOfResultsError;
+    type ItemError = csv::Error;
+
+    fn file_to_iter_of_results<T>(&self, file: &File) -> Result<<Self as FileToIterOfResults>::Output<T>, <Self as FileToIterOfResults>::Error>
+    where
+        T: DeserializeOwned + 'static,
+    {
+        use CsvFileToIterOfResultsError::*;
+        let file_owned = errgonomic::handle!(file.try_clone(), TryCloneFailed);
+        let mut reader = csv::Reader::from_reader(file_owned);
+        let _headers = errgonomic::handle!(reader.headers(), HeadersFailed);
+        let iter = reader.into_deserialize::<T>();
+        Ok(iter)
+    }
+}
+
 #[derive(Error, Debug)]
 pub enum CsvIterToFileError {
     #[error("failed to serialize CSV item")]
@@ -70,18 +77,18 @@ pub enum CsvIterToFileError {
     FlushFailed { source: std::io::Error },
 }
 
-#[cfg(feature = "csv")]
 #[derive(Error, Debug)]
 pub enum CsvFileToIterError {
+    #[error("failed to create CSV iterator")]
+    FileToIterOfResultsFailed { source: CsvFileToIterOfResultsError },
+    #[error("failed to deserialize CSV items")]
+    DeserializeFailed { source: ErrVec<csv::Error> },
+}
+
+#[derive(Error, Debug)]
+pub enum CsvFileToIterOfResultsError {
     #[error("failed to clone CSV file handle")]
     TryCloneFailed { source: std::io::Error },
     #[error("failed to read CSV headers")]
     HeadersFailed { source: csv::Error },
-}
-
-#[cfg(feature = "csv")]
-#[derive(Error, Debug)]
-pub enum CsvFileToIterItemError {
-    #[error("failed to deserialize CSV item")]
-    DeserializeFailed { source: csv::Error },
 }
