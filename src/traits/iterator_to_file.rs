@@ -2,7 +2,7 @@ use serde::Serialize;
 use std::borrow::Borrow;
 use std::fs::File;
 
-pub trait IterToFile {
+pub trait IteratorToFile {
     type Output;
     type Error;
 

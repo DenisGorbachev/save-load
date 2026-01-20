@@ -1,5 +1,5 @@
-use crate::{FileToIter, FileToIterOfResults, IterToFile};
-use errgonomic::ErrVec;
+use crate::{FileToIterator, FileToIteratorOfResults, IteratorToFile};
+use errgonomic::{handle, handle_iter, ErrVec};
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 use std::borrow::Borrow;
@@ -9,7 +9,7 @@ use thiserror::Error;
 #[derive(Default, Eq, PartialEq, Ord, PartialOrd, Hash, Clone, Copy, Debug)]
 pub struct Csv;
 
-impl IterToFile for Csv {
+impl IteratorToFile for Csv {
     type Output = ();
     type Error = CsvIterToFileError;
 
@@ -24,31 +24,31 @@ impl IterToFile for Csv {
         let result = iter
             .into_iter()
             .try_for_each(|item| writer.serialize(item.borrow()));
-        errgonomic::handle!(result, SerializeFailed);
-        errgonomic::handle!(writer.flush(), FlushFailed);
+        handle!(result, SerializeFailed);
+        handle!(writer.flush(), FlushFailed);
         Ok(())
     }
 }
 
-impl FileToIter for Csv {
+impl FileToIterator for Csv {
     type Output<T>
         = std::vec::IntoIter<T>
     where
         T: DeserializeOwned + 'static;
     type Error = CsvFileToIterError;
 
-    fn file_to_iter<T>(&self, file: &File) -> Result<<Self as FileToIter>::Output<T>, <Self as FileToIter>::Error>
+    fn file_to_iter<T>(&self, file: File) -> Result<<Self as FileToIterator>::Output<T>, <Self as FileToIterator>::Error>
     where
         T: DeserializeOwned + 'static,
     {
         use CsvFileToIterError::*;
-        let iter = errgonomic::handle!(<Self as FileToIterOfResults>::file_to_iter_of_results(self, file), FileToIterOfResultsFailed);
-        let items = errgonomic::handle_iter!(iter, DeserializeFailed);
+        let iter = handle!(self.file_to_iter_of_results(file), FileToIterOfResultsFailed);
+        let items = handle_iter!(iter, DeserializeFailed);
         Ok(items.into_iter())
     }
 }
 
-impl FileToIterOfResults for Csv {
+impl FileToIteratorOfResults for Csv {
     type Output<T>
         = csv::DeserializeRecordsIntoIter<File, T>
     where
@@ -56,14 +56,13 @@ impl FileToIterOfResults for Csv {
     type Error = CsvFileToIterOfResultsError;
     type ItemError = csv::Error;
 
-    fn file_to_iter_of_results<T>(&self, file: &File) -> Result<<Self as FileToIterOfResults>::Output<T>, <Self as FileToIterOfResults>::Error>
+    fn file_to_iter_of_results<T>(&self, file: File) -> Result<<Self as FileToIteratorOfResults>::Output<T>, <Self as FileToIteratorOfResults>::Error>
     where
         T: DeserializeOwned + 'static,
     {
         use CsvFileToIterOfResultsError::*;
-        let file_owned = errgonomic::handle!(file.try_clone(), TryCloneFailed);
-        let mut reader = csv::Reader::from_reader(file_owned);
-        let _headers = errgonomic::handle!(reader.headers(), HeadersFailed);
+        let mut reader = csv::Reader::from_reader(file);
+        let _headers = handle!(reader.headers(), HeadersFailed);
         let iter = reader.into_deserialize::<T>();
         Ok(iter)
     }
@@ -87,8 +86,6 @@ pub enum CsvFileToIterError {
 
 #[derive(Error, Debug)]
 pub enum CsvFileToIterOfResultsError {
-    #[error("failed to clone CSV file handle")]
-    TryCloneFailed { source: std::io::Error },
     #[error("failed to read CSV headers")]
     HeadersFailed { source: csv::Error },
 }
