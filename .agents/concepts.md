@@ -1,6 +1,8 @@
-# Package specification
+# Concepts
 
-## General
+## `save-load` package
+
+A Rust package that provides envelope enums that implement functionality common for multiple file formats.
 
 * MSRV: 1.75
   * Needs to support `async fn` in traits
