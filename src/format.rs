@@ -14,7 +14,7 @@ use crate::errors::unrecognized_extension_error::UnrecognizedExtensionError;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use std::ffi::OsStr;
-use std::fs::{read_to_string, File};
+use std::fs::{File, read_to_string};
 use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use strum::{Display, VariantArray};

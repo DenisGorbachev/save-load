@@ -1,9 +1,9 @@
 [package]
 name = "save-load"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.85.0"
 description = "Read & write files in JSON, YAML, XML, and TOML formats."
-license = "Apache-2.0 OR MIT"
 homepage = "https://github.com/DenisGorbachev/save-load"
 repository = "https://github.com/DenisGorbachev/save-load"
 readme = "README.md"
@@ -23,7 +23,7 @@ exclude = [
     "mise.toml",
     "rumdl.toml",
     "rustfmt.toml",
-    "yolobox"
+    ".yolobox"
 ]
 
 [package.metadata.details]
