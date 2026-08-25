@@ -1,12 +1,12 @@
-[package]
-name = "save-load"
+[workspace]
+resolver = "3"
+
+[workspace.package]
 version = "0.1.0"
 edition = "2024"
 rust-version = "1.85.0"
-description = "Read & write files in JSON, YAML, XML, and TOML formats."
 homepage = "https://github.com/DenisGorbachev/save-load"
 repository = "https://github.com/DenisGorbachev/save-load"
-readme = "README.md"
 keywords = ["serde", "filesystem", "fs", "serialize", "format"]
 categories = ["filesystem", "rendering::data-formats", "value-formatting", "encoding", "rust-patterns"]
 exclude = [
@@ -15,6 +15,7 @@ exclude = [
     "doc/dev",
     "specs",
     "AGENTS.ts",
+    "CargoMetadata.ts",
     "README.ts",
     "AGENTS*.md",
     "CLAUDE*.md",
@@ -22,19 +23,44 @@ exclude = [
     "deno.json",
     "commitlint.config.mjs",
     "fnox.toml",
-    "lefthook.yml",
     "mise.toml",
     "rumdl.toml",
     "rustfmt.toml",
     ".yolobox"
 ]
 
+[workspace.metadata.details]
+name = "save-load"
+title = "Read & write files in JSON, YAML, XML, and TOML formats"
+readme = { generate = false }
+
+[workspace.lints.rust]
+redundant_imports = "deny"
+unused_import_braces = "deny"
+# unused_qualifications must not be "deny" because our code style has multiple `use Foo::*;`, and some macros (derive_more::Display, strum::Display, strum::EnumString) produce code with full qualifications
+# unused_qualifications = "deny"
+
+[workspace.lints.clippy]
+absolute_paths = "deny"
+arithmetic_side_effects = "deny"
+
+[package]
+name = "save-load"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Read & write files in JSON, YAML, XML, and TOML formats."
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+exclude.workspace = true
+
 [package.metadata.details]
 title = "Read & write files in JSON, YAML, XML, and TOML formats"
-tagline = ""
-summary = ""
-announcement = ""
-readme = { generate = false }
+
+[lints]
+workspace = true
 
 [dependencies]
 clap = { version = "4.0", optional = true, features = ["derive"] }

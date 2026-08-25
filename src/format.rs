@@ -19,6 +19,13 @@ use std::io::{BufRead, BufReader, Write};
 use std::path::Path;
 use strum::{Display, VariantArray};
 
+#[cfg(any(feature = "csv", feature = "serde-jsonlines"))]
+use crate::errors::item_not_found_error::ItemNotFoundError;
+#[cfg(any(feature = "quick-xml", feature = "serde-xml-rs", feature = "serde_json", feature = "serde_yaml", feature = "toml"))]
+use crate::errors::unsupported_format_error::UnsupportedFormatError;
+#[cfg(feature = "quick-xml")]
+use quick_xml::{de::from_str as from_xml_str, se::to_string as to_xml_string};
+
 #[derive(Serialize, Deserialize, Display, VariantArray, Ord, PartialOrd, Eq, PartialEq, Hash, Clone, Copy, Debug)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
 #[non_exhaustive]
@@ -132,7 +139,7 @@ impl Format {
             #[cfg(feature = "serde-xml-rs")]
             Format::Xml => serde_xml_rs::to_string(input)?,
             #[cfg(feature = "quick-xml")]
-            Format::Xml => quick_xml::se::to_string(input)?,
+            Format::Xml => to_xml_string(input)?,
             #[cfg(feature = "toml")]
             Format::Toml => toml::to_string(input)?,
             #[cfg(feature = "csv")]
@@ -152,7 +159,7 @@ impl Format {
         let items = input.into_iter();
         match self {
             #[cfg(feature = "serde_json")]
-            Format::Json => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
+            Format::Json => Err(UnsupportedFormatError {
                 format: self,
             })?,
             #[cfg(feature = "serde-jsonlines")]
@@ -164,19 +171,19 @@ impl Format {
                 Ok(())
             }
             #[cfg(feature = "serde_yaml")]
-            Format::Yaml => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
+            Format::Yaml => Err(UnsupportedFormatError {
                 format: self,
             })?,
             #[cfg(feature = "serde-xml-rs")]
-            Format::Xml => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
+            Format::Xml => Err(UnsupportedFormatError {
                 format: self,
             })?,
             #[cfg(feature = "quick-xml")]
-            Format::Xml => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
+            Format::Xml => Err(UnsupportedFormatError {
                 format: self,
             })?,
             #[cfg(feature = "toml")]
-            Format::Toml => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
+            Format::Toml => Err(UnsupportedFormatError {
                 format: self,
             })?,
             #[cfg(feature = "csv")]
@@ -201,14 +208,14 @@ impl Format {
                 reader
                     .read()
                     .map_err(DeserializeOneError::SerdeJsonlines)?
-                    .ok_or::<DeserializeOneError>(crate::errors::item_not_found_error::ItemNotFoundError.into())?
+                    .ok_or::<DeserializeOneError>(ItemNotFoundError.into())?
             }
             #[cfg(feature = "serde_yaml")]
             Format::Yaml => serde_yaml::from_str(input)?,
             #[cfg(feature = "serde-xml-rs")]
             Format::Xml => serde_xml_rs::from_str(input)?,
             #[cfg(feature = "quick-xml")]
-            Format::Xml => quick_xml::de::from_str(input)?,
+            Format::Xml => from_xml_str(input)?,
             #[cfg(feature = "toml")]
             Format::Toml => toml::from_str(input)?,
             #[cfg(feature = "csv")]
@@ -217,7 +224,7 @@ impl Format {
                 let mut reader = csv::Reader::from_reader(input.as_bytes());
                 let mut iter = reader.deserialize();
                 iter.next()
-                    .ok_or::<DeserializeOneError>(crate::errors::item_not_found_error::ItemNotFoundError.into())??
+                    .ok_or::<DeserializeOneError>(ItemNotFoundError.into())??
             }
         })
     }
@@ -226,7 +233,7 @@ impl Format {
     pub fn deserialize_many_from_reader<T: DeserializeOwned + 'static>(self, mut reader: impl BufRead + 'static) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>>>, DeserializeManyError> {
         Ok(match self {
             #[cfg(feature = "serde_json")]
-            Format::Json => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
+            Format::Json => Err(UnsupportedFormatError {
                 format: self,
             })?,
             #[cfg(feature = "serde-jsonlines")]
@@ -238,20 +245,20 @@ impl Format {
                 Box::new(iter)
             }
             #[cfg(feature = "serde_yaml")]
-            Format::Yaml => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
+            Format::Yaml => Err(UnsupportedFormatError {
                 format: self,
             })?,
             #[cfg(feature = "serde-xml-rs")]
-            Format::Xml => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
+            Format::Xml => Err(UnsupportedFormatError {
                 format: self,
             })?,
             #[cfg(feature = "quick-xml")]
-            Format::Xml => Err(crate::errors::unsupported_format_error::UnsupportedFormatError {
+            Format::Xml => Err(UnsupportedFormatError {
                 format: self,
             })?,
             #[cfg(feature = "toml")]
             Format::Toml => {
-                // crate::errors::unsupported_format_error::UnsupportedFormatError {
+                // UnsupportedFormatError {
                 //     format: self,
                 // }.into()
                 // TODO: TOML doesn't support line-by-line deserialization, so using it with reader doesn't make sense
