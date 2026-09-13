@@ -21,10 +21,12 @@ use strum::{Display, VariantArray};
 
 #[cfg(any(feature = "csv", feature = "serde-jsonlines"))]
 use crate::errors::item_not_found_error::ItemNotFoundError;
-#[cfg(any(feature = "quick-xml", feature = "serde-xml-rs", feature = "serde_json", feature = "serde_yaml", feature = "toml"))]
+#[cfg(any(feature = "quick-xml", feature = "ron", feature = "serde-xml-rs", feature = "serde_json", feature = "serde_yaml", feature = "toml"))]
 use crate::errors::unsupported_format_error::UnsupportedFormatError;
 #[cfg(feature = "quick-xml")]
 use quick_xml::{de::from_str as from_xml_str, se::to_string as to_xml_string};
+#[cfg(feature = "ron")]
+use ron::ser::{PrettyConfig, to_string_pretty};
 
 #[derive(Serialize, Deserialize, Display, VariantArray, Ord, PartialOrd, Eq, PartialEq, Hash, Clone, Copy, Debug)]
 #[cfg_attr(feature = "clap", derive(clap::ValueEnum))]
@@ -42,12 +44,16 @@ pub enum Format {
     Toml,
     #[cfg(feature = "csv")]
     Csv,
+    /// Rusty Object Notation, enabled by the `ron` feature.
+    /// Streaming multiple values is unsupported; use the single-value methods for collections.
+    #[cfg(feature = "ron")]
+    Ron,
 }
 
 impl Format {
     pub fn save_one<T: Serialize>(self, path: impl AsRef<Path>, value: &T) -> Result<(), SaveOneError> {
-        let mut file = File::create(path)?;
         let output = self.serialize_one(value)?;
+        let mut file = File::create(path)?;
         file.write_all(output.as_bytes())?;
         Ok(())
     }
@@ -142,6 +148,8 @@ impl Format {
             Format::Xml => to_xml_string(input)?,
             #[cfg(feature = "toml")]
             Format::Toml => toml::to_string(input)?,
+            #[cfg(feature = "ron")]
+            Format::Ron => to_string_pretty(input, PrettyConfig::default())?,
             #[cfg(feature = "csv")]
             Format::Csv => {
                 let mut writer = csv::Writer::from_writer(vec![]);
@@ -186,6 +194,10 @@ impl Format {
             Format::Toml => Err(UnsupportedFormatError {
                 format: self,
             })?,
+            #[cfg(feature = "ron")]
+            Format::Ron => Err(UnsupportedFormatError {
+                format: self,
+            })?,
             #[cfg(feature = "csv")]
             Format::Csv => {
                 let mut writer = csv::Writer::from_writer(writer);
@@ -218,6 +230,8 @@ impl Format {
             Format::Xml => from_xml_str(input)?,
             #[cfg(feature = "toml")]
             Format::Toml => toml::from_str(input)?,
+            #[cfg(feature = "ron")]
+            Format::Ron => ron::from_str(input)?,
             #[cfg(feature = "csv")]
             Format::Csv => {
                 // NOTE: The input must contain the columns
@@ -232,6 +246,10 @@ impl Format {
     #[allow(unreachable_patterns, unused_variables, unreachable_code, unused_mut)]
     pub fn deserialize_many_from_reader<T: DeserializeOwned + 'static>(self, mut reader: impl BufRead + 'static) -> Result<Box<dyn Iterator<Item = Result<T, DeserializeOneError>>>, DeserializeManyError> {
         Ok(match self {
+            #[cfg(feature = "ron")]
+            Format::Ron => Err(UnsupportedFormatError {
+                format: self,
+            })?,
             #[cfg(feature = "serde_json")]
             Format::Json => Err(UnsupportedFormatError {
                 format: self,
@@ -291,6 +309,10 @@ impl Format {
             Format::Xml => "xml",
             #[cfg(feature = "toml")]
             Format::Toml => "toml",
+            #[cfg(feature = "ron")]
+            Format::Ron => "ron",
+            #[cfg(feature = "csv")]
+            Format::Csv => "csv",
             #[allow(unreachable_patterns)]
             _ => "txt",
         }
@@ -312,6 +334,10 @@ impl Format {
             Some("xml") => Ok(Format::Xml),
             #[cfg(feature = "toml")]
             Some("toml") => Ok(Format::Toml),
+            #[cfg(feature = "ron")]
+            Some("ron") => Ok(Format::Ron),
+            #[cfg(feature = "csv")]
+            Some("csv") => Ok(Format::Csv),
             #[allow(unreachable_patterns)]
             _ => Err(UnrecognizedExtensionError {
                 extension: extension.to_owned(),

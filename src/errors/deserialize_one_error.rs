@@ -2,6 +2,8 @@ use derive_more::{Display, Error, From};
 
 #[cfg(any(feature = "csv", feature = "serde-jsonlines"))]
 use crate::errors::item_not_found_error::ItemNotFoundError;
+#[cfg(feature = "ron")]
+use ron::error::SpannedError;
 #[cfg(feature = "serde-jsonlines")]
 use std::io;
 
@@ -20,6 +22,8 @@ pub enum DeserializeOneError {
     QuickXml(quick_xml::DeError),
     #[cfg(feature = "toml")]
     Toml(toml::de::Error),
+    #[cfg(feature = "ron")]
+    Ron(SpannedError),
     #[cfg(feature = "csv")]
     Csv(csv::Error),
     #[cfg(any(feature = "csv", feature = "serde-jsonlines"))]

@@ -31,7 +31,7 @@ exclude = [
 
 [workspace.metadata.details]
 name = "save-load"
-title = "Read & write files in JSON, YAML, XML, and TOML formats"
+title = "Read & write files in JSON, YAML, XML, TOML, RON formats"
 readme = { generate = false }
 
 [workspace.lints.rust]
@@ -49,7 +49,7 @@ name = "save-load"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Read & write files in JSON, YAML, XML, and TOML formats."
+description = "Read & write files in JSON, YAML, XML, TOML, RON formats."
 homepage.workspace = true
 repository.workspace = true
 keywords.workspace = true
@@ -57,7 +57,7 @@ categories.workspace = true
 exclude.workspace = true
 
 [package.metadata.details]
-title = "Read & write files in JSON, YAML, XML, and TOML formats"
+title = "Read & write files in JSON, YAML, XML, TOML, RON formats"
 
 [lints]
 workspace = true
@@ -67,6 +67,7 @@ clap = { version = "4.0", optional = true, features = ["derive"] }
 csv = { version = "1.0", optional = true }
 derive_more = { version = "2.0", features = ["full"] }
 quick-xml = { version = "0.39", optional = true, features = ["serialize"] }
+ron = { version = "0.12.0", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 serde-jsonlines = { version = "0.7", optional = true }
 serde-xml-rs = { version = "0.8", optional = true }

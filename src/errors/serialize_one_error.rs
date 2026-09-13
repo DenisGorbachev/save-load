@@ -20,6 +20,8 @@ pub enum SerializeOneError {
     QuickXml(quick_xml::SeError),
     #[cfg(feature = "toml")]
     Toml(toml::ser::Error),
+    #[cfg(feature = "ron")]
+    Ron(ron::Error),
     #[cfg(feature = "csv")]
     Csv(csv::Error),
     #[cfg(feature = "csv")]
