@@ -576,7 +576,7 @@ A package that has a remote whose name contains `public` or `pre-public` and end
   * Examples
     * TOML
 
-### Project info
+## Project info
 
 ### `git remote`
 
@@ -857,7 +857,7 @@ strum = { version = "0.27", features = ["derive"] }
 toml = { version = "0.9", optional = true }
 ```
 
-#### src/lib.rs
+### src/lib.rs
 
 ```rust
 pub mod errors;
