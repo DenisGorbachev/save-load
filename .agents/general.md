@@ -93,11 +93,10 @@ Write code that minimizes losses:
 
 - When spawning a code review subagent: use fresh context (not inherited).
 
-## Messages from agent to user
+## Skills
 
-- Use `~` in paths.
-- Write structured messages.
-- Don't mention successful verifications and checks unless asked explicitly.
+- When editing or reviewing files that contain shell code, use and follow the `shell-scripts` skill.
+- When choosing between identically named skills, prefer the repository-local copy.
 
 ## Commands
 
@@ -449,17 +448,7 @@ A function marked with `#[test]` or `#[tokio::test]`.
 
 ## Shell
 
-- Don't use hard wraps to enforce max line length (I'll use soft wraps in my editor)
-- If a command is an argument of a tool call:
-  - Then:
-    - Prefer short options
-  - Else:
-    - If it's a common command (one of: set, cd, cp, mv, rm, mkdir, ls, ln, chmod, chown):
-      - Then:
-        - Prefer short options
-      - Else
-        - Prefer long options
-    - Prefer `echo` instead of `printf`
+- Prefer short options for commands used in tool calls.
 
 ## Cargo.toml
 
